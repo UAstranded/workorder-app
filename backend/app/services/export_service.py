@@ -48,7 +48,10 @@ def export_single_work_order(wo: WorkOrderResponse, tz_label: str = "UTC") -> io
         "Created At (UTC)", "Updated At (UTC)",
     ]
 
-    for col, header in enumerate(headers, 1):
+    expense_headers = ["Expense Type", "Amount", "Description", "Tech Name"]
+
+    all_headers = headers + expense_headers
+    for col, header in enumerate(all_headers, 1):
         ws.cell(row=1, column=col, value=header)
 
     row = 2
@@ -60,20 +63,23 @@ def export_single_work_order(wo: WorkOrderResponse, tz_label: str = "UTC") -> io
         wo.status, wo.confirmation_status, wo.site_timezone,
         fmt_dt(wo.created_at, "UTC"), fmt_dt(wo.updated_at, "UTC"),
     ]
-    for col, val in enumerate(values, 1):
-        ws.cell(row=row, column=col, value=val)
 
-    if wo.tasks:
-        task_start_col = len(headers) + 1
-        task_headers = ["Task Name", "Qty Required"]
-        for col, h in enumerate(task_headers, task_start_col):
-            ws.cell(row=1, column=col, value=h)
-        for i, task in enumerate(wo.tasks):
-            r = 2 + i
-            ws.cell(row=r, column=task_start_col, value=task.task_name)
-            ws.cell(row=r, column=task_start_col + 1, value=task.qty_required)
+    expenses_data = getattr(wo, 'expenses', None)
+    if expenses_data:
+        for i, exp in enumerate(expenses_data):
+            r = row + i
+            if i == 0:
+                for col, val in enumerate(values, 1):
+                    ws.cell(row=r, column=col, value=val)
+            ws.cell(row=r, column=len(headers) + 1, value=exp.expense_type.value if hasattr(exp.expense_type, 'value') else exp.expense_type)
+            ws.cell(row=r, column=len(headers) + 2, value=float(exp.amount))
+            ws.cell(row=r, column=len(headers) + 3, value=exp.description or "")
+            ws.cell(row=r, column=len(headers) + 4, value=exp.tech_name or "")
+    else:
+        for col, val in enumerate(values, 1):
+            ws.cell(row=row, column=col, value=val)
 
-    num_cols = len(headers) + (2 if wo.tasks else 0)
+    num_cols = len(all_headers)
     style_header(ws, num_cols)
     auto_width(ws, num_cols)
 

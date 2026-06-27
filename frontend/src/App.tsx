@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import WorkOrderDetailPage from './pages/WorkOrderDetailPage';
 import WorkOrderCreatePage from './pages/WorkOrderCreatePage';
 import WorkOrderEditPage from './pages/WorkOrderEditPage';
+import AccountSettingsPage from './pages/AccountSettingsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="orders/new" element={<WorkOrderCreatePage />} />
         <Route path="orders/:reference" element={<WorkOrderDetailPage />} />
         <Route path="orders/:reference/edit" element={<WorkOrderEditPage />} />
+        <Route path="account" element={<AccountSettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

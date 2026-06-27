@@ -54,6 +54,19 @@ class WorkOrderUpdate(WorkOrderBase):
     pass
 
 
+class ExpenseSchema(BaseModel):
+    id: uuid.UUID
+    work_order_id: uuid.UUID
+    expense_type: str
+    amount: float
+    description: Optional[str] = ""
+    tech_name: Optional[str] = ""
+    sort_order: int = 0
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class WorkOrderResponse(WorkOrderBase):
     id: uuid.UUID
     reference: str
@@ -65,6 +78,7 @@ class WorkOrderResponse(WorkOrderBase):
     created_by_id: Optional[uuid.UUID] = None
     modified_by_id: Optional[uuid.UUID] = None
     tasks: List[TaskSchema] = []
+    expenses: List[ExpenseSchema] = []
     image_count: Optional[int] = 0
 
     model_config = {"from_attributes": True}

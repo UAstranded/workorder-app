@@ -24,8 +24,8 @@ export default function WorkOrderCreatePage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Link to="/" className="text-gray-400 hover:text-gray-600"><ArrowLeft size={20} /></Link>
-        <h1 className="text-2xl font-bold">New Work Order</h1>
+        <Link to="/" className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"><ArrowLeft size={20} /></Link>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">New Work Order</h1>
       </div>
       <WorkOrderForm onSubmit={handleSubmit} loading={loading} />
     </div>

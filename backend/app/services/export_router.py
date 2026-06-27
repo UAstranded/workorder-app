@@ -9,7 +9,7 @@ from datetime import datetime
 from app.database import get_db
 from app.models.user import User
 from app.models.work_order import WorkOrder
-from app.schemas.work_order import WorkOrderResponse, WorkOrderListResponse, TaskSchema
+from app.schemas.work_order import WorkOrderResponse, WorkOrderListResponse, TaskSchema, ExpenseSchema
 from app.routers.auth import get_current_user
 from app.services.export_service import export_single_work_order, export_multiple_work_orders
 
@@ -25,7 +25,7 @@ async def export_work_order(
 ):
     result = await db.execute(
         select(WorkOrder)
-        .options(selectinload(WorkOrder.tasks))
+        .options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.expenses))
         .where(WorkOrder.reference == reference)
     )
     wo = result.scalar_one_or_none()
@@ -35,6 +35,19 @@ async def export_work_order(
     tasks = [
         TaskSchema(id=t.id, task_name=t.task_name, qty_required=t.qty_required, sort_order=t.sort_order)
         for t in (wo.tasks or [])
+    ]
+    expenses = [
+        ExpenseSchema(
+            id=e.id,
+            work_order_id=e.work_order_id,
+            expense_type=e.expense_type.value if hasattr(e.expense_type, 'value') else e.expense_type,
+            amount=e.amount,
+            description=e.description,
+            tech_name=e.tech_name,
+            sort_order=e.sort_order,
+            created_at=e.created_at,
+        )
+        for e in (wo.expenses or [])
     ]
     wo_resp = WorkOrderResponse(
         id=wo.id,
@@ -62,6 +75,7 @@ async def export_work_order(
         created_by_id=wo.created_by_id,
         modified_by_id=wo.modified_by_id,
         tasks=tasks,
+        expenses=expenses,
         image_count=0,
     )
 

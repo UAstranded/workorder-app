@@ -67,14 +67,14 @@ export default function WorkOrderEditPage() {
     }
   };
 
-  if (fetching) return <div className="text-center py-12 text-gray-500">Loading...</div>;
-  if (!initial) return <div className="text-center py-12 text-gray-500">Work order not found</div>;
+  if (fetching) return <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading...</div>;
+  if (!initial) return <div className="text-center py-12 text-gray-500 dark:text-gray-400">Work order not found</div>;
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Link to={`/orders/${reference}`} className="text-gray-400 hover:text-gray-600"><ArrowLeft size={20} /></Link>
-        <h1 className="text-2xl font-bold">Edit {reference}</h1>
+        <Link to={`/orders/${reference}`} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"><ArrowLeft size={20} /></Link>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Edit {reference}</h1>
       </div>
       <WorkOrderForm initial={initial} onSubmit={handleSubmit} loading={loading} />
     </div>

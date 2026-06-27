@@ -13,6 +13,7 @@ export interface ListParams {
   sort_dir?: string;
   skip?: number;
   limit?: number;
+  _t?: number;
 }
 
 export async function listWorkOrders(params?: ListParams): Promise<WorkOrderListEntry[]> {

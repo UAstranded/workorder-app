@@ -23,5 +23,7 @@ async def init_db():
     from app.models.user import User
     from app.models.work_order import WorkOrder, Task
     from app.models.image import ImageAttachment, LabelSuggestion
+    from app.models.expense import WorkOrderExpense
+    from app.models.app_settings import AppSetting
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

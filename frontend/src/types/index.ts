@@ -41,6 +41,7 @@ export interface WorkOrder {
   created_by_id: string | null;
   modified_by_id: string | null;
   tasks: Task[];
+  expenses: WorkOrderExpense[];
   image_count: number;
 }
 
@@ -73,6 +74,17 @@ export interface ImageAttachment {
   file_size: number;
   uploaded_at: string;
   uploaded_by_id: string | null;
+}
+
+export interface WorkOrderExpense {
+  id: string;
+  work_order_id: string;
+  expense_type: string;
+  amount: number;
+  description: string;
+  tech_name: string;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface AuthState {

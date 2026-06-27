@@ -58,6 +58,7 @@ class WorkOrder(Base):
     modifier = relationship("User", back_populates="work_orders_modified", foreign_keys=[modified_by_id])
     tasks = relationship("Task", back_populates="work_order", cascade="all, delete-orphan", order_by="Task.sort_order")
     images = relationship("ImageAttachment", back_populates="work_order", cascade="all, delete-orphan")
+    expenses = relationship("WorkOrderExpense", back_populates="work_order", cascade="all, delete-orphan", order_by="WorkOrderExpense.sort_order")
 
 
 class Task(Base):

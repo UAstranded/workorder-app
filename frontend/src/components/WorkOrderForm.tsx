@@ -107,20 +107,20 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
   };
 
   const inputClass = (field: string) =>
-    `w-full border ${errors[field] ? 'border-red-400' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`;
+    `w-full border ${errors[field] ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500`;
 
-  const labelClass = "block text-xs font-medium text-gray-600 mb-1";
+  const labelClass = "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
       {Object.keys(errors).length > 0 && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm p-3 rounded">
           {Object.values(errors).map((e, i) => <div key={i}>{e}</div>)}
         </div>
       )}
 
-      <section className="bg-white rounded-lg shadow p-4">
-        <h2 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Identifiers</h2>
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
+        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Identifiers</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label className={labelClass}>Account Number</label>
@@ -141,8 +141,8 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow p-4">
-        <h2 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Site / Contact Info</h2>
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
+        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Site / Contact Info</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
             <label className={labelClass}>Location Name *</label>
@@ -180,8 +180,8 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow p-4">
-        <h2 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Schedule</h2>
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
+        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Schedule</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
           {(['earliest_start', 'planned_start', 'due_date'] as const).map((field) => (
             <div key={field}>
@@ -211,8 +211,8 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow p-4">
-        <h2 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Status</h2>
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
+        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Status</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>Status</label>
@@ -232,10 +232,10 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow p-4">
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Tasks</h2>
-          <button type="button" onClick={addTask} className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800">
+          <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Tasks</h2>
+          <button type="button" onClick={addTask} className="inline-flex items-center gap-1 text-sm text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 transition-colors">
             <Plus size={16} /> Add Task
           </button>
         </div>
@@ -246,17 +246,17 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
                 placeholder="Task name"
                 value={task.task_name}
                 onChange={(e) => updateTask(idx, 'task_name', e.target.value)}
-                className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm"
+                className="flex-1 border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
               <input
                 type="number"
                 min={1}
                 value={task.qty_required}
                 onChange={(e) => updateTask(idx, 'qty_required', parseInt(e.target.value) || 1)}
-                className="w-20 border border-gray-300 rounded px-3 py-2 text-sm"
+                className="w-20 border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
               {form.tasks.length > 1 && (
-                <button type="button" onClick={() => removeTask(idx)} className="p-1 text-gray-400 hover:text-red-600">
+                <button type="button" onClick={() => removeTask(idx)} className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                   <Trash2 size={16} />
                 </button>
               )}
@@ -266,7 +266,7 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
       </section>
 
       <div className="flex justify-end gap-3">
-        <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium">
+        <button type="submit" disabled={loading} className="px-6 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 disabled:opacity-50 font-medium transition-colors">
           {loading ? 'Saving...' : 'Save'}
         </button>
       </div>
