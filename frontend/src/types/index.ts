@@ -34,6 +34,7 @@ export interface WorkOrder {
   planned_start: string | null;
   due_date: string | null;
   site_timezone: string;
+  notes: string;
   status: string;
   confirmation_status: string;
   created_at: string;
@@ -111,6 +112,7 @@ export interface WorkOrderFormData {
   planned_start: string;
   due_date: string;
   site_timezone: string;
+  notes: string;
   status: string;
   confirmation_status: string;
   tasks: Task[];

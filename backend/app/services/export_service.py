@@ -45,6 +45,7 @@ def export_single_work_order(wo: WorkOrderResponse, tz_label: str = "UTC") -> io
         "Location Name", "Site Contact", "Address", "Address 2", "City", "State", "Zip", "Primary Phone",
         f"Earliest Start ({tz_label})", f"Planned Start ({tz_label})", f"Due Date ({tz_label})",
         "Status", "Confirmation Status", "Site Timezone",
+        "Notes",
         "Created At (UTC)", "Updated At (UTC)",
     ]
 
@@ -61,6 +62,7 @@ def export_single_work_order(wo: WorkOrderResponse, tz_label: str = "UTC") -> io
         wo.city, wo.state, wo.zip, wo.primary_phone,
         fmt_dt(wo.earliest_start, tz_label), fmt_dt(wo.planned_start, tz_label), fmt_dt(wo.due_date, tz_label),
         wo.status, wo.confirmation_status, wo.site_timezone,
+        wo.notes or "",
         fmt_dt(wo.created_at, "UTC"), fmt_dt(wo.updated_at, "UTC"),
     ]
 

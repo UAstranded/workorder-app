@@ -7,6 +7,7 @@ import WorkOrderDetailPage from './pages/WorkOrderDetailPage';
 import WorkOrderCreatePage from './pages/WorkOrderCreatePage';
 import WorkOrderEditPage from './pages/WorkOrderEditPage';
 import AccountSettingsPage from './pages/AccountSettingsPage';
+import SharePage from './pages/SharePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="orders/:reference/edit" element={<WorkOrderEditPage />} />
         <Route path="account" element={<AccountSettingsPage />} />
       </Route>
+      <Route path="share/:reference" element={<SharePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

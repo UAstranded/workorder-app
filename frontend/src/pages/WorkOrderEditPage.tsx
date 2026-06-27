@@ -45,6 +45,7 @@ export default function WorkOrderEditPage() {
           planned_start: toLocalDatetime(wo.planned_start, wo.site_timezone),
           due_date: toLocalDatetime(wo.due_date, wo.site_timezone),
           site_timezone: wo.site_timezone,
+          notes: wo.notes || '',
           status: wo.status,
           confirmation_status: wo.confirmation_status,
           tasks: wo.tasks.length > 0 ? wo.tasks : [{ task_name: '', qty_required: 1, sort_order: 0 }],

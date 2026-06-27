@@ -97,6 +97,72 @@ async def list_work_orders(
     return items
 
 
+public_router = APIRouter(prefix="/api/public", tags=["public"])
+
+
+@public_router.get("/work-orders/{reference}", response_model=WorkOrderResponse)
+async def get_public_work_order(
+    reference: str,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(WorkOrder)
+        .options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.expenses))
+        .where(WorkOrder.reference == reference)
+    )
+    wo = result.scalar_one_or_none()
+    if not wo:
+        raise HTTPException(status_code=404, detail="Work order not found")
+
+    tasks = [
+        TaskSchema(id=t.id, task_name=t.task_name, qty_required=t.qty_required, sort_order=t.sort_order)
+        for t in (wo.tasks or [])
+    ]
+    expenses = [
+        ExpenseSchema(
+            id=e.id,
+            work_order_id=e.work_order_id,
+            expense_type=e.expense_type.value if hasattr(e.expense_type, 'value') else e.expense_type,
+            amount=e.amount,
+            description=e.description,
+            tech_name=e.tech_name,
+            sort_order=e.sort_order,
+            created_at=e.created_at,
+        )
+        for e in (wo.expenses or [])
+    ]
+    return WorkOrderResponse(
+        id=wo.id,
+        reference=wo.reference,
+        account_number=wo.account_number,
+        invoice_number=wo.invoice_number,
+        po_number=wo.po_number,
+        dealer_id=wo.dealer_id,
+        location_name=wo.location_name,
+        site_contact=wo.site_contact,
+        address_line1=wo.address_line1,
+        address_line2=wo.address_line2,
+        city=wo.city,
+        state=wo.state,
+        zip=wo.zip,
+        primary_phone=wo.primary_phone,
+        earliest_start=wo.earliest_start,
+        planned_start=wo.planned_start,
+        due_date=wo.due_date,
+        site_timezone=wo.site_timezone,
+        notes=wo.notes or "",
+        status=wo.status.value if hasattr(wo.status, 'value') else wo.status,
+        confirmation_status=wo.confirmation_status.value if hasattr(wo.confirmation_status, 'value') else wo.confirmation_status,
+        created_at=wo.created_at,
+        updated_at=wo.updated_at,
+        created_by_id=wo.created_by_id,
+        modified_by_id=wo.modified_by_id,
+        tasks=tasks,
+        expenses=expenses,
+        image_count=0,
+    )
+
+
 @router.get("/{reference}", response_model=WorkOrderResponse)
 async def get_work_order(
     reference: str,
@@ -149,6 +215,7 @@ async def get_work_order(
         planned_start=wo.planned_start,
         due_date=wo.due_date,
         site_timezone=wo.site_timezone,
+        notes=wo.notes or "",
         status=wo.status.value if hasattr(wo.status, 'value') else wo.status,
         confirmation_status=wo.confirmation_status.value if hasattr(wo.confirmation_status, 'value') else wo.confirmation_status,
         created_at=wo.created_at,
@@ -186,6 +253,7 @@ async def create_work_order(
         earliest_start=body.earliest_start,
         planned_start=body.planned_start,
         due_date=body.due_date,
+        notes=body.notes or "",
         site_timezone=body.site_timezone or "America/New_York",
         status=WorkOrderStatus(body.status) if body.status else WorkOrderStatus.OPEN_UNCONFIRMED,
         confirmation_status=ConfirmationStatus(body.confirmation_status) if body.confirmation_status else ConfirmationStatus.UNCONFIRMED,

@@ -16,6 +16,7 @@ const emptyForm = (): WorkOrderFormData => ({
   city: '', state: '', zip: '', primary_phone: '',
   earliest_start: '', planned_start: '', due_date: '',
   site_timezone: 'America/New_York',
+  notes: '',
   status: 'Open - Unconfirmed',
   confirmation_status: 'Unconfirmed',
   tasks: [{ task_name: '', qty_required: 1, sort_order: 0 }],
@@ -209,6 +210,16 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
             ))}
           </select>
         </div>
+      </section>
+
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
+        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Notes</h2>
+        <textarea
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 min-h-[80px] resize-y"
+          value={form.notes}
+          onChange={(e) => update('notes', e.target.value)}
+          placeholder="General notes, instructions, or remarks..."
+        />
       </section>
 
       <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">

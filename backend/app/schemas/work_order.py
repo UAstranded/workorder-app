@@ -40,6 +40,8 @@ class WorkOrderBase(BaseModel):
 
     site_timezone: Optional[str] = "America/New_York"
 
+    notes: Optional[str] = ""
+
     status: Optional[str] = "Open - Unconfirmed"
     confirmation_status: Optional[str] = "Unconfirmed"
 

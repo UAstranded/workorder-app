@@ -68,6 +68,7 @@ async def export_work_order(
         planned_start=wo.planned_start,
         due_date=wo.due_date,
         site_timezone=wo.site_timezone,
+        notes=wo.notes or "",
         status=wo.status.value if hasattr(wo.status, 'value') else wo.status,
         confirmation_status=wo.confirmation_status.value if hasattr(wo.confirmation_status, 'value') else wo.confirmation_status,
         created_at=wo.created_at,

@@ -44,6 +44,8 @@ class WorkOrder(Base):
     planned_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    notes: Mapped[str] = mapped_column(Text, nullable=True, default="")
+
     site_timezone: Mapped[str] = mapped_column(String(100), nullable=True, default="America/New_York")
 
     status: Mapped[WorkOrderStatus] = mapped_column(SAEnum(WorkOrderStatus), default=WorkOrderStatus.OPEN_UNCONFIRMED, nullable=False)
