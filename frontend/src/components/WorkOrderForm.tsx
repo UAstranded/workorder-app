@@ -2,6 +2,7 @@ import { useState, useRef, FormEvent } from 'react';
 import { WorkOrderFormData, Task } from '../types';
 import { useTimezone } from '../contexts/TimezoneContext';
 import { Plus, Trash2, Save, Scan } from 'lucide-react';
+import TechsSection from './TechsSection';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { scanImage, parseWorkOrderForm, applyParsedFields } from '../utils/ocr';
 
@@ -21,6 +22,7 @@ const emptyForm = (): WorkOrderFormData => ({
   status: 'Open - Unconfirmed',
   confirmation_status: 'Unconfirmed',
   tasks: [{ task_name: '', qty_required: 1, sort_order: 0 }],
+  techs: [],
 });
 
 function toLocalDatetime(utcStr: string | null | undefined, tz: string): string {
@@ -120,6 +122,7 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
       planned_start: form.planned_start ? toUtc(form.planned_start, form.site_timezone) : null as any,
       due_date: form.due_date ? toUtc(form.due_date, form.site_timezone) : null as any,
       tasks: form.tasks.filter((t) => t.task_name.trim()),
+      techs: form.techs.filter((t) => t.tech_name.trim()),
     };
 
     await onSubmit(submitData);
@@ -299,6 +302,13 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="card-accent p-5">
+        <TechsSection
+          techs={form.techs}
+          onChange={(techs) => setForm((prev) => ({ ...prev, techs }))}
+        />
       </section>
 
       <div className="flex justify-end gap-3 pt-2">

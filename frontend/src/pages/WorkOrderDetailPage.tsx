@@ -6,7 +6,38 @@ import { useTimezone } from '../contexts/TimezoneContext';
 import { formatInTimeZone } from 'date-fns-tz';
 import ImageGallery from '../components/ImageGallery';
 import ExpensesSection from '../components/ExpensesSection';
-import { ArrowLeft, Edit, Trash2, Share2, Download, Phone, Clock } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Share2, Download, Phone, Clock, MoreHorizontal, Wrench } from 'lucide-react';
+
+function MobileActions({ onShare, onExport, onEdit, onDelete }: { onShare: () => void; onExport: () => void; onEdit: string; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setOpen(!open)} className="btn-secondary text-xs px-2">
+        <MoreHorizontal size={16} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1 z-20 w-40 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg py-1">
+            <button onClick={() => { setOpen(false); onShare(); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+              <Share2 size={14} /> Share
+            </button>
+            <button onClick={() => { setOpen(false); onExport(); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+              <Download size={14} /> Export
+            </button>
+            <Link to={onEdit} onClick={() => setOpen(false)} className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+              <Edit size={14} /> Edit
+            </Link>
+            <button onClick={() => { setOpen(false); onDelete(); }} className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+              <Trash2 size={14} /> Delete
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function WorkOrderDetailPage() {
   const { reference } = useParams<{ reference: string }>();
@@ -86,11 +117,19 @@ export default function WorkOrderDetailPage() {
             {confBadge(wo.confirmation_status)}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="hidden sm:flex gap-2">
           <button onClick={handleShare} className="btn-secondary text-xs"><Share2 size={14} /> Share</button>
           <button onClick={() => downloadExport(getExportUrl(wo.reference, displayTz), `work-order-${wo.reference}.xlsx`)} className="btn-secondary text-xs"><Download size={14} /> Export</button>
           <Link to={`/orders/${wo.reference}/edit`} className="btn-primary text-xs"><Edit size={14} /> Edit</Link>
           <button onClick={handleDelete} className="btn-danger text-xs"><Trash2 size={14} /> Delete</button>
+        </div>
+        <div className="relative sm:hidden">
+          <MobileActions
+            onShare={handleShare}
+            onExport={() => downloadExport(getExportUrl(wo.reference, displayTz), `work-order-${wo.reference}.xlsx`)}
+            onEdit={`/orders/${wo.reference}/edit`}
+            onDelete={handleDelete}
+          />
         </div>
       </div>
 
@@ -182,6 +221,21 @@ export default function WorkOrderDetailPage() {
                     <span className="text-gray-900 dark:text-gray-100">{t.task_name}</span>
                     <span className="text-gray-500 dark:text-gray-400 font-medium tabular-nums ml-4">{t.qty_required}</span>
                   </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="card-accent p-5">
+            <h2 className="card-header mb-4">Techs Assigned</h2>
+            {wo.techs.length === 0 ? (
+              <p className="text-sm text-gray-400 dark:text-gray-500 italic">No techs assigned</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {wo.techs.map((t, i) => (
+                  <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                    <Wrench size={12} /> {t.tech_name}
+                  </span>
                 ))}
               </div>
             )}

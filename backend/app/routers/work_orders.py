@@ -10,7 +10,9 @@ from app.database import get_db
 from app.models.user import User
 from app.models.work_order import WorkOrder, WorkOrderStatus, ConfirmationStatus, Task
 from app.models.image import ImageAttachment
+from app.models.tech import WorkOrderTech
 from app.schemas.work_order import WorkOrderCreate, WorkOrderUpdate, WorkOrderResponse, WorkOrderListResponse, TaskSchema, ExpenseSchema
+from app.schemas.tech import TechSchema
 from app.models.expense import WorkOrderExpense
 from app.routers.auth import get_current_user
 
@@ -41,7 +43,7 @@ async def list_work_orders(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    query = select(WorkOrder).options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.images))
+    query = select(WorkOrder).options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.techs), selectinload(WorkOrder.images))
 
     if search:
         search_filter = or_(
@@ -107,7 +109,7 @@ async def get_public_work_order(
 ):
     result = await db.execute(
         select(WorkOrder)
-        .options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.expenses))
+        .options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.techs), selectinload(WorkOrder.expenses))
         .where(WorkOrder.reference == reference)
     )
     wo = result.scalar_one_or_none()
@@ -117,6 +119,10 @@ async def get_public_work_order(
     tasks = [
         TaskSchema(id=t.id, task_name=t.task_name, qty_required=t.qty_required, sort_order=t.sort_order)
         for t in (wo.tasks or [])
+    ]
+    techs = [
+        TechSchema(id=t.id, tech_name=t.tech_name, sort_order=t.sort_order)
+        for t in (wo.techs or [])
     ]
     expenses = [
         ExpenseSchema(
@@ -158,6 +164,7 @@ async def get_public_work_order(
         created_by_id=wo.created_by_id,
         modified_by_id=wo.modified_by_id,
         tasks=tasks,
+        techs=techs,
         expenses=expenses,
         image_count=0,
     )
@@ -171,7 +178,7 @@ async def get_work_order(
 ):
     result = await db.execute(
         select(WorkOrder)
-        .options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.images), selectinload(WorkOrder.expenses))
+        .options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.techs), selectinload(WorkOrder.images), selectinload(WorkOrder.expenses))
         .where(WorkOrder.reference == reference)
     )
     wo = result.scalar_one_or_none()
@@ -182,6 +189,10 @@ async def get_work_order(
     tasks = [
         TaskSchema(id=t.id, task_name=t.task_name, qty_required=t.qty_required, sort_order=t.sort_order)
         for t in (wo.tasks or [])
+    ]
+    techs = [
+        TechSchema(id=t.id, tech_name=t.tech_name, sort_order=t.sort_order)
+        for t in (wo.techs or [])
     ]
     expenses = [
         ExpenseSchema(
@@ -223,6 +234,7 @@ async def get_work_order(
         created_by_id=wo.created_by_id,
         modified_by_id=wo.modified_by_id,
         tasks=tasks,
+        techs=techs,
         expenses=expenses,
         image_count=img_count,
     )
@@ -272,6 +284,14 @@ async def create_work_order(
         )
         db.add(task)
 
+    for i, t in enumerate(body.techs or []):
+        tech = WorkOrderTech(
+            work_order_id=wo.id,
+            tech_name=t.tech_name,
+            sort_order=t.sort_order or i,
+        )
+        db.add(tech)
+
     await db.commit()
     await db.refresh(wo)
     return await get_work_order(wo.reference, db, user)
@@ -285,13 +305,13 @@ async def update_work_order(
     user: User = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(WorkOrder).options(selectinload(WorkOrder.tasks)).where(WorkOrder.reference == reference)
+        select(WorkOrder).options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.techs)).where(WorkOrder.reference == reference)
     )
     wo = result.scalar_one_or_none()
     if not wo:
         raise HTTPException(status_code=404, detail="Work order not found")
 
-    update_data = body.model_dump(exclude_unset=True, exclude={"tasks"})
+    update_data = body.model_dump(exclude_unset=True, exclude={"tasks", "techs"})
     for field, value in update_data.items():
         if field == "status" and value is not None:
             setattr(wo, field, WorkOrderStatus(value))
@@ -311,6 +331,16 @@ async def update_work_order(
                 sort_order=t.sort_order or i,
             )
             db.add(task)
+
+    if body.techs is not None:
+        await db.execute(delete(WorkOrderTech).where(WorkOrderTech.work_order_id == wo.id))
+        for i, t in enumerate(body.techs):
+            tech = WorkOrderTech(
+                work_order_id=wo.id,
+                tech_name=t.tech_name,
+                sort_order=t.sort_order or i,
+            )
+            db.add(tech)
 
     await db.commit()
     await db.refresh(wo)

@@ -42,6 +42,7 @@ export interface WorkOrder {
   created_by_id: string | null;
   modified_by_id: string | null;
   tasks: Task[];
+  techs: TechAssignment[];
   expenses: WorkOrderExpense[];
   image_count: number;
 }
@@ -94,6 +95,12 @@ export interface AuthState {
   loading: boolean;
 }
 
+export interface TechAssignment {
+  id?: string;
+  tech_name: string;
+  sort_order: number;
+}
+
 export interface WorkOrderFormData {
   reference?: string;
   account_number: string;
@@ -116,4 +123,5 @@ export interface WorkOrderFormData {
   status: string;
   confirmation_status: string;
   tasks: Task[];
+  techs: TechAssignment[];
 }

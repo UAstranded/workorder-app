@@ -4,7 +4,7 @@ import { listWorkOrders, ListParams, deleteWorkOrder, getExportListUrl, download
 import { WorkOrderListEntry } from '../types';
 import { useTimezone } from '../contexts/TimezoneContext';
 import { formatInTimeZone } from 'date-fns-tz';
-import { Search, Download, Trash2, Eye, Edit, ChevronUp, ChevronDown, Plus } from 'lucide-react';
+import { Search, Download, Trash2, Eye, Edit, ChevronUp, ChevronDown } from 'lucide-react';
 
 const statusOptions = ['', 'Open - Confirmed', 'Open - Unconfirmed', 'In Progress', 'Completed', 'Cancelled'];
 const confirmationOptions = ['', 'Confirmed', 'Unconfirmed'];
@@ -114,9 +114,6 @@ export default function DashboardPage() {
               <Download size={14} /> Export ({selected.size})
             </button>
           )}
-          <Link to="/orders/new" className="btn-primary text-xs">
-            <Plus size={14} /> New Work Order
-          </Link>
         </div>
       </div>
 

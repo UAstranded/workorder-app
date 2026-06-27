@@ -49,6 +49,7 @@ export default function WorkOrderEditPage() {
           status: wo.status,
           confirmation_status: wo.confirmation_status,
           tasks: wo.tasks.length > 0 ? wo.tasks : [{ task_name: '', qty_required: 1, sort_order: 0 }],
+          techs: wo.techs.length > 0 ? wo.techs : [],
         });
       })
       .catch(() => navigate('/'))

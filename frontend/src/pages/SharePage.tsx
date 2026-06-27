@@ -4,7 +4,7 @@ import client from '../api/client';
 import { WorkOrder as WorkOrderType } from '../types';
 import { useTimezone } from '../contexts/TimezoneContext';
 import { formatInTimeZone } from 'date-fns-tz';
-import { Phone, Clock, Hammer } from 'lucide-react';
+import { Phone, Clock, Hammer, Wrench } from 'lucide-react';
 
 export default function SharePage() {
   const { reference } = useParams<{ reference: string }>();
@@ -163,6 +163,21 @@ export default function SharePage() {
                     <span className="text-gray-900 dark:text-gray-100">{t.task_name}</span>
                     <span className="text-gray-500 dark:text-gray-400 font-medium tabular-nums ml-4">{t.qty_required}</span>
                   </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="card-accent p-5">
+            <h2 className="card-header mb-4">Techs Assigned</h2>
+            {wo.techs.length === 0 ? (
+              <p className="text-sm text-gray-400 dark:text-gray-500 italic">No techs assigned</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {wo.techs.map((t, i) => (
+                  <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                    <Wrench size={12} /> {t.tech_name}
+                  </span>
                 ))}
               </div>
             )}

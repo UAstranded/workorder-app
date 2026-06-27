@@ -4,6 +4,8 @@ from datetime import datetime
 import uuid
 import re
 
+from app.schemas.tech import TechCreate, TechSchema
+
 
 class TaskSchema(BaseModel):
     id: Optional[uuid.UUID] = None
@@ -46,6 +48,7 @@ class WorkOrderBase(BaseModel):
     confirmation_status: Optional[str] = "Unconfirmed"
 
     tasks: Optional[List[TaskCreate]] = []
+    techs: Optional[List[TechCreate]] = []
 
 
 class WorkOrderCreate(WorkOrderBase):
@@ -80,6 +83,7 @@ class WorkOrderResponse(WorkOrderBase):
     created_by_id: Optional[uuid.UUID] = None
     modified_by_id: Optional[uuid.UUID] = None
     tasks: List[TaskSchema] = []
+    techs: List[TechSchema] = []
     expenses: List[ExpenseSchema] = []
     image_count: Optional[int] = 0
 
