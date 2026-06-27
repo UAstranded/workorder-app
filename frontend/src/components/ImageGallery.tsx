@@ -20,18 +20,6 @@ export default function ImageGallery({ workOrderId }: Props) {
     try {
       const data = await listImages(workOrderId);
       setImages(data);
-      const keys = Object.keys(
-        data.reduce<Record<string, ImageAttachment[]>>((acc, img) => {
-          const key = img.label?.trim() || '__unlabeled__';
-          (acc[key] ??= []).push(img);
-          return acc;
-        }, {})
-      ).sort((a, b) => {
-        if (a === '__unlabeled__') return 1;
-        if (b === '__unlabeled__') return -1;
-        return a.localeCompare(b);
-      });
-      if (keys.length > 0) setOpenFolders(new Set(keys));
     } catch { /* */ }
   };
 
@@ -125,7 +113,7 @@ export default function ImageGallery({ workOrderId }: Props) {
       {images.length === 0 ? (
         <p className="text-sm text-gray-500 dark:text-gray-400 italic">No images attached</p>
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {groupKeys.map((key) => {
             const isOpen = openFolders.has(key);
             const label = key === '__unlabeled__' ? 'Unlabeled' : key;
@@ -143,7 +131,7 @@ export default function ImageGallery({ workOrderId }: Props) {
                 </button>
                 {isOpen && (
                   <div className="px-3 pb-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 pt-2">
                       {grouped[key].map((img) => (
                         <div key={img.id} className="group relative bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-card hover:shadow-card-hover transition-shadow">
                           <img

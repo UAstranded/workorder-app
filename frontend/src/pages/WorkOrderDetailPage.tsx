@@ -194,10 +194,7 @@ export default function WorkOrderDetailPage() {
             </section>
           )}
 
-          <section className="card-accent p-5">
-            <h2 className="card-header mb-4">Attachments</h2>
-            <ImageGallery workOrderId={wo.id} />
-          </section>
+          <ImageGallery workOrderId={wo.id} />
 
           <ExpensesSection workOrderReference={wo.reference} />
         </div>
