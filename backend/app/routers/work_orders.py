@@ -41,7 +41,7 @@ async def list_work_orders(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    query = select(WorkOrder).options(selectinload(WorkOrder.tasks))
+    query = select(WorkOrder).options(selectinload(WorkOrder.tasks), selectinload(WorkOrder.images))
 
     if search:
         search_filter = or_(
