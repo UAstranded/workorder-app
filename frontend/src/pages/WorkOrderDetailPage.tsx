@@ -14,7 +14,6 @@ export default function WorkOrderDetailPage() {
   const { displayTz } = useTimezone();
   const [wo, setWo] = useState<WorkOrderType | null>(null);
   const [loading, setLoading] = useState(true);
-  // expenses state handled by ExpensesSection
 
   useEffect(() => {
     if (!reference) return;
@@ -34,7 +33,7 @@ export default function WorkOrderDetailPage() {
   const handleShare = async () => {
     const url = `${window.location.origin}/share/${wo?.reference}`;
     if (navigator.share) {
-      try { await navigator.share({ title: `Work Order ${wo?.reference}`, url }); return; } catch { /* fall through */ }
+      try { await navigator.share({ title: `Work Order ${wo?.reference}`, url }); return; } catch { }
     }
     try {
       await navigator.clipboard.writeText(url);
@@ -73,42 +72,33 @@ export default function WorkOrderDetailPage() {
     return <span className={s === 'Confirmed' ? 'badge-confirmed' : 'badge-unconfirmed'}>{s}</span>;
   };
 
-  if (loading) return <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading...</div>;
-  if (!wo) return <div className="text-center py-12 text-gray-500 dark:text-gray-400">Work order not found</div>;
+  if (loading) return <div className="text-center py-16 text-sm text-gray-400 dark:text-gray-500">Loading...</div>;
+  if (!wo) return <div className="text-center py-16 text-sm text-gray-400 dark:text-gray-500">Work order not found</div>;
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
-          <Link to="/" className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"><ArrowLeft size={20} /></Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{wo.reference}</h1>
-          {statusBadge(wo.status)}
-          {confBadge(wo.confirmation_status)}
+          <Link to="/" className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 -ml-1"><ArrowLeft size={20} /></Link>
+          <h1 className="text-xl font-display font-bold text-gray-900 dark:text-gray-100 tracking-tight">{wo.reference}</h1>
+          <div className="flex items-center gap-2">
+            {statusBadge(wo.status)}
+            {confBadge(wo.confirmation_status)}
+          </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={handleShare} className="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-            <Share2 size={16} /> Share
-          </button>
-          <button
-            onClick={() => downloadExport(getExportUrl(wo.reference, displayTz), `work-order-${wo.reference}.xlsx`)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          >
-            <Download size={16} /> Export
-          </button>
-          <Link to={`/orders/${wo.reference}/edit`} className="inline-flex items-center gap-1 px-3 py-1.5 bg-brand-600 text-white rounded-md text-sm hover:bg-brand-700 transition-colors">
-            <Edit size={16} /> Edit
-          </Link>
-          <button onClick={handleDelete} className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition-colors">
-            <Trash2 size={16} /> Delete
-          </button>
+          <button onClick={handleShare} className="btn-secondary text-xs"><Share2 size={14} /> Share</button>
+          <button onClick={() => downloadExport(getExportUrl(wo.reference, displayTz), `work-order-${wo.reference}.xlsx`)} className="btn-secondary text-xs"><Download size={14} /> Export</button>
+          <Link to={`/orders/${wo.reference}/edit`} className="btn-primary text-xs"><Edit size={14} /> Edit</Link>
+          <button onClick={handleDelete} className="btn-danger text-xs"><Trash2 size={14} /> Delete</button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-          <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-            <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Identifiers</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+        <div className="lg:col-span-2 space-y-5">
+          <section className="card-accent p-5">
+            <h2 className="card-header mb-4">Identifiers</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
               {[
                 ['Account #', wo.account_number],
                 ['Invoice #', wo.invoice_number],
@@ -116,116 +106,114 @@ export default function WorkOrderDetailPage() {
                 ['Dealer ID', wo.dealer_id],
               ].map(([label, val]) => (
                 <div key={label as string}>
-                  <span className="text-gray-500 dark:text-gray-400 text-xs">{label}</span>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{val || '-'}</p>
+                  <span className="section-label block mb-0.5">{label}</span>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 font-display text-xs tracking-tight">{val || '-'}</p>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-            <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Site Info</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <section className="card-accent p-5">
+            <h2 className="card-header mb-4">Site Info</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div className="sm:col-span-2">
-                <span className="text-gray-500 dark:text-gray-400 text-xs">Location</span>
+                <span className="section-label block mb-0.5">Location</span>
                 <p className="font-medium text-gray-900 dark:text-gray-100">{wo.location_name || '-'}</p>
               </div>
               <div>
-                <span className="text-gray-500 dark:text-gray-400 text-xs">Contact</span>
+                <span className="section-label block mb-0.5">Contact</span>
                 <p className="font-medium text-gray-900 dark:text-gray-100">{wo.site_contact || '-'}</p>
               </div>
               <div>
-                <span className="text-gray-500 dark:text-gray-400 text-xs">Phone</span>
+                <span className="section-label block mb-0.5">Phone</span>
                 {wo.primary_phone ? (
-                  <a href={`tel:${wo.primary_phone}`} className="font-medium text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1">
-                    <Phone size={14} /> {wo.primary_phone}
+                  <a href={`tel:${wo.primary_phone}`} className="font-medium text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1 text-sm">
+                    <Phone size={13} /> {wo.primary_phone}
                   </a>
                 ) : <p className="font-medium text-gray-900 dark:text-gray-100">-</p>}
               </div>
               <div className="sm:col-span-2">
-                <span className="text-gray-500 dark:text-gray-400 text-xs">Address</span>
+                <span className="section-label block mb-0.5">Address</span>
                 <p className="font-medium text-gray-900 dark:text-gray-100">{wo.address_line1 || '-'}{wo.address_line2 ? `, ${wo.address_line2}` : ''}</p>
               </div>
               <div>
-                <span className="text-gray-500 dark:text-gray-400 text-xs">City</span>
+                <span className="section-label block mb-0.5">City</span>
                 <p className="font-medium text-gray-900 dark:text-gray-100">{wo.city || '-'}</p>
               </div>
               <div>
-                <span className="text-gray-500 dark:text-gray-400 text-xs">State</span>
+                <span className="section-label block mb-0.5">State</span>
                 <p className="font-medium text-gray-900 dark:text-gray-100">{wo.state || '-'}</p>
               </div>
               <div>
-                <span className="text-gray-500 dark:text-gray-400 text-xs">ZIP</span>
+                <span className="section-label block mb-0.5">ZIP</span>
                 <p className="font-medium text-gray-900 dark:text-gray-100">{wo.zip || '-'}</p>
               </div>
             </div>
           </section>
 
-          <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-            <div className="flex items-center gap-2 mb-3">
+          <section className="card-accent p-5">
+            <div className="flex items-center gap-2 mb-4">
               <Clock size={14} className="text-gray-400 dark:text-gray-500" />
-              <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Schedule ({displayTz})</h2>
+              <h2 className="card-header">Schedule ({displayTz})</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
               {[
                 ['Earliest Start', wo.earliest_start],
                 ['Planned Start', wo.planned_start],
                 ['Due Date', wo.due_date],
               ].map(([label, val]) => (
                 <div key={label as string}>
-                  <span className="text-gray-500 dark:text-gray-400 text-xs">{label}</span>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{fmt(val as string | null)}</p>
+                  <span className="section-label block mb-0.5">{label}</span>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{fmt(val as string | null)}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">Site Timezone: {wo.site_timezone}</div>
+            <div className="mt-3 text-xs text-gray-400 dark:text-gray-500">Site Timezone: {wo.site_timezone}</div>
           </section>
 
-          <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-            <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Tasks</h2>
+          <section className="card-accent p-5">
+            <h2 className="card-header mb-4">Tasks</h2>
             {wo.tasks.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400 italic">No tasks</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 italic">No tasks</p>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-800">
-                    <th className="text-left py-1 text-gray-500 dark:text-gray-400 font-medium">Task</th>
-                    <th className="text-right py-1 text-gray-500 dark:text-gray-400 font-medium">Qty</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {wo.tasks.map((t, i) => (
-                    <tr key={i} className="border-b border-gray-100 dark:border-gray-800">
-                      <td className="py-1.5 text-gray-900 dark:text-gray-100">{t.task_name}</td>
-                      <td className="text-right py-1.5 text-gray-900 dark:text-gray-100">{t.qty_required}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="divide-y divide-gray-100 dark:divide-gray-800 text-sm">
+                {wo.tasks.map((t, i) => (
+                  <div key={i} className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
+                    <span className="text-gray-900 dark:text-gray-100">{t.task_name}</span>
+                    <span className="text-gray-500 dark:text-gray-400 font-medium tabular-nums ml-4">{t.qty_required}</span>
+                  </div>
+                ))}
+              </div>
             )}
           </section>
 
           {wo.notes && (
-            <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-              <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Notes</h2>
-              <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{wo.notes}</p>
+            <section className="card-accent p-5">
+              <h2 className="card-header mb-3">Notes</h2>
+              <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">{wo.notes}</p>
             </section>
           )}
 
-          <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-            <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Attachments</h2>
+          <section className="card-accent p-5">
+            <h2 className="card-header mb-4">Attachments</h2>
             <ImageGallery workOrderId={wo.id} />
           </section>
 
           <ExpensesSection workOrderReference={wo.reference} />
         </div>
 
-        <div className="space-y-4">
-          <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-            <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Metadata</h2>
-            <div className="space-y-2 text-sm">
-              <div><span className="text-gray-500 dark:text-gray-400 text-xs block">Created</span><span className="text-gray-900 dark:text-gray-100">{fmt(wo.created_at)}</span></div>
-              <div><span className="text-gray-500 dark:text-gray-400 text-xs block">Updated</span><span className="text-gray-900 dark:text-gray-100">{fmt(wo.updated_at)}</span></div>
+        <div className="space-y-5">
+          <section className="card p-5">
+            <h2 className="card-header mb-4">Metadata</h2>
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="section-label block mb-0.5">Created</span>
+                <span className="text-gray-900 dark:text-gray-100 text-sm">{fmt(wo.created_at)}</span>
+              </div>
+              <div>
+                <span className="section-label block mb-0.5">Updated</span>
+                <span className="text-gray-900 dark:text-gray-100 text-sm">{fmt(wo.updated_at)}</span>
+              </div>
             </div>
           </section>
         </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ImageAttachment } from '../types';
-import { listImages, deleteImage, updateImageLabel, uploadImage, getLabelSuggestions } from '../api/images';
+import { listImages, deleteImage, updateImageLabel, uploadImage, uploadImages, getLabelSuggestions } from '../api/images';
 import { X, Upload, Tag, Trash2, Camera } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -35,12 +35,15 @@ export default function ImageGallery({ workOrderId }: Props) {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
     setUploading(true);
-    for (const file of Array.from(files)) {
-      try {
-        await uploadImage(workOrderId, file, '');
-      } catch { /* */ }
+    const fileList = Array.from(files);
+    try {
+      await uploadImages(workOrderId, fileList);
+    } catch {
+      await Promise.all(
+        fileList.map((file) => uploadImage(workOrderId, file, '').catch(() => {}))
+      );
     }
     setUploading(false);
     fetchImages();

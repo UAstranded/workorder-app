@@ -11,6 +11,15 @@ export async function uploadImage(workOrderId: string, file: File, label: string
   return data;
 }
 
+export async function uploadImages(workOrderId: string, files: File[]): Promise<ImageAttachment[]> {
+  const form = new FormData();
+  files.forEach((file) => form.append('files', file));
+  const { data } = await client.post(`/images/upload-multiple/${workOrderId}`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+}
+
 export async function listImages(workOrderId: string): Promise<ImageAttachment[]> {
   const { data } = await client.get(`/images/work-order/${workOrderId}`);
   return data;

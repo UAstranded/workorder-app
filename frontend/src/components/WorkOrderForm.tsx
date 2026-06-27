@@ -1,8 +1,9 @@
-import { useState, FormEvent } from 'react';
+import { useState, useRef, FormEvent } from 'react';
 import { WorkOrderFormData, Task } from '../types';
 import { useTimezone } from '../contexts/TimezoneContext';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Save, Scan } from 'lucide-react';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { scanImage, parseWorkOrderForm, applyParsedFields } from '../utils/ocr';
 
 interface Props {
   initial?: WorkOrderFormData;
@@ -50,6 +51,8 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
     return emptyForm();
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [scanning, setScanning] = useState(false);
+  const scanRef = useRef<HTMLInputElement>(null);
 
   const update = (field: keyof WorkOrderFormData, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -76,6 +79,21 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
       tasks[idx] = { ...tasks[idx], [field]: value };
       return { ...prev, tasks };
     });
+  };
+
+  const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setScanning(true);
+    try {
+      const text = await scanImage(file);
+      const parsed = parseWorkOrderForm(text);
+      setForm((prev) => applyParsedFields(prev, parsed));
+    } catch (err: any) {
+      alert('OCR scan failed: ' + (err.message || 'Unknown error'));
+    }
+    setScanning(false);
+    if (scanRef.current) scanRef.current.value = '';
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -108,21 +126,28 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
   };
 
   const inputClass = (field: string) =>
-    `w-full border ${errors[field] ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500`;
+    `input-field ${errors[field] ? 'input-error' : ''}`;
 
-  const labelClass = "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1";
+  const labelClass = "section-label block mb-1";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
       {Object.keys(errors).length > 0 && (
-        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm p-3 rounded">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm p-3 rounded-md">
           {Object.values(errors).map((e, i) => <div key={i}>{e}</div>)}
         </div>
       )}
 
-      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Identifiers</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="flex items-center justify-end gap-2 mb-2">
+        <input ref={scanRef} type="file" accept="image/*" className="hidden" onChange={handleScan} />
+        <button type="button" onClick={() => scanRef.current?.click()} disabled={scanning} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-brand-300 dark:border-brand-700 text-brand-700 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors disabled:opacity-50">
+          <Scan size={14} /> {scanning ? 'Scanning...' : 'Scan Form'}
+        </button>
+      </div>
+
+      <section className="card-accent p-5">
+        <h2 className="card-header mb-4">Identifiers</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className={labelClass}>Account Number</label>
             <input className={inputClass('account_number')} value={form.account_number} onChange={(e) => update('account_number', e.target.value)} />
@@ -142,9 +167,9 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Site / Contact Info</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <section className="card-accent p-5">
+        <h2 className="card-header mb-4">Site / Contact Info</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <label className={labelClass}>Location Name *</label>
             <input className={inputClass('location_name')} value={form.location_name} onChange={(e) => update('location_name', e.target.value)} />
@@ -181,9 +206,9 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Schedule</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+      <section className="card-accent p-5">
+        <h2 className="card-header mb-4">Schedule</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           {(['earliest_start', 'planned_start', 'due_date'] as const).map((field) => (
             <div key={field}>
               <label className={labelClass}>
@@ -212,19 +237,19 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Notes</h2>
+      <section className="card-accent p-5">
+        <h2 className="card-header mb-4">Notes</h2>
         <textarea
-          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 min-h-[80px] resize-y"
+          className="input-field min-h-[100px] resize-y"
           value={form.notes}
           onChange={(e) => update('notes', e.target.value)}
           placeholder="General notes, instructions, or remarks..."
         />
       </section>
 
-      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Status</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <section className="card-accent p-5">
+        <h2 className="card-header mb-4">Status</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Status</label>
             <select value={form.status} onChange={(e) => update('status', e.target.value)} className={inputClass('status')}>
@@ -243,11 +268,11 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 transition-colors">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Tasks</h2>
-          <button type="button" onClick={addTask} className="inline-flex items-center gap-1 text-sm text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 transition-colors">
-            <Plus size={16} /> Add Task
+      <section className="card-accent p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="card-header">Tasks</h2>
+          <button type="button" onClick={addTask} className="text-xs text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium inline-flex items-center gap-1 transition-colors">
+            <Plus size={14} /> Add Task
           </button>
         </div>
         <div className="space-y-2">
@@ -257,18 +282,18 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
                 placeholder="Task name"
                 value={task.task_name}
                 onChange={(e) => updateTask(idx, 'task_name', e.target.value)}
-                className="flex-1 border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="flex-1 input-field"
               />
               <input
                 type="number"
                 min={1}
                 value={task.qty_required}
                 onChange={(e) => updateTask(idx, 'qty_required', parseInt(e.target.value) || 1)}
-                className="w-20 border border-gray-300 dark:border-gray-700 rounded px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="w-20 input-field text-center"
               />
               {form.tasks.length > 1 && (
-                <button type="button" onClick={() => removeTask(idx)} className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                  <Trash2 size={16} />
+                <button type="button" onClick={() => removeTask(idx)} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                  <Trash2 size={15} />
                 </button>
               )}
             </div>
@@ -276,9 +301,9 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
         </div>
       </section>
 
-      <div className="flex justify-end gap-3">
-        <button type="submit" disabled={loading} className="px-6 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 disabled:opacity-50 font-medium transition-colors">
-          {loading ? 'Saving...' : 'Save'}
+      <div className="flex justify-end gap-3 pt-2">
+        <button type="submit" disabled={loading} className="btn-primary">
+          <Save size={16} /> {loading ? 'Saving...' : 'Save'}
         </button>
       </div>
     </form>

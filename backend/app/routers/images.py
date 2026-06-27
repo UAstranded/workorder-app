@@ -76,6 +76,55 @@ async def upload_image(
     return ImageAttachmentResponse.model_validate(img)
 
 
+@router.post("/upload-multiple/{work_order_id}", response_model=List[ImageAttachmentResponse])
+async def upload_multiple_images(
+    work_order_id: uuid.UUID,
+    files: List[UploadFile] = File(...),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    wo_result = await db.execute(select(WorkOrder).where(WorkOrder.id == work_order_id))
+    if not wo_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Work order not found")
+
+    for file in files:
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(status_code=400, detail=f"File type {ext} not allowed for {file.filename}")
+
+    ensure_upload_dir()
+    created = []
+
+    for file in files:
+        contents = await file.read()
+        if len(contents) > MAX_UPLOAD_SIZE_MB * 1024 * 1024:
+            raise HTTPException(status_code=400, detail=f"{file.filename} exceeds {MAX_UPLOAD_SIZE_MB}MB limit")
+
+        ext = os.path.splitext(file.filename)[1].lower()
+        stored_name = f"{uuid.uuid4()}{ext}"
+        file_path = os.path.join(UPLOAD_DIR, stored_name)
+
+        with open(file_path, "wb") as f:
+            f.write(contents)
+
+        img = ImageAttachment(
+            work_order_id=work_order_id,
+            original_filename=file.filename or "unknown",
+            stored_filename=stored_name,
+            label="",
+            mime_type=file.content_type or "image/jpeg",
+            file_size=len(contents),
+            uploaded_by_id=user.id,
+        )
+        db.add(img)
+        created.append(img)
+
+    await db.commit()
+    for img in created:
+        await db.refresh(img)
+    return [ImageAttachmentResponse.model_validate(img) for img in created]
+
+
 @router.get("/work-order/{work_order_id}", response_model=List[ImageAttachmentResponse])
 async def list_images(
     work_order_id: uuid.UUID,
