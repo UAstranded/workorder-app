@@ -1,33 +1,58 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-type Theme = 'light' | 'dark';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { themes, getTheme, ThemeDef } from '../themes';
 
 interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
+  theme: ThemeDef;
+  isDark: boolean;
+  setThemeName: (name: string) => void;
+  toggleDark: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-function getInitialTheme(): Theme {
-  const stored = localStorage.getItem('theme');
-  if (stored === 'light' || stored === 'dark') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+function getStoredThemeName(): string {
+  try {
+    return localStorage.getItem('theme-name') || 'default';
+  } catch {
+    return 'default';
+  }
+}
+
+function getStoredIsDark(): boolean {
+  try {
+    const stored = localStorage.getItem('dark-mode');
+    if (stored !== null) return stored === 'true';
+  } catch {}
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [themeName, setThemeNameState] = useState<string>(getStoredThemeName);
+  const [isDark, setIsDark] = useState<boolean>(getStoredIsDark);
+
+  const setThemeName = useCallback((name: string) => {
+    setThemeNameState(name);
+    try { localStorage.setItem('theme-name', name); } catch {}
+  }, []);
+
+  const toggleDark = useCallback(() => {
+    setIsDark((d) => {
+      const next = !d;
+      try { localStorage.setItem('dark-mode', String(next)); } catch {}
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    root.setAttribute('data-theme', themeName);
+    root.classList.toggle('dark', isDark);
+  }, [themeName, isDark]);
 
-  const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
+  const theme = getTheme(themeName);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, isDark, setThemeName, toggleDark }}>
       {children}
     </ThemeContext.Provider>
   );

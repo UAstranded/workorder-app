@@ -6,6 +6,7 @@ import { TimezoneProvider } from './contexts/TimezoneContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import App from './App';
 import './index.css';
+import './styles/themes.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

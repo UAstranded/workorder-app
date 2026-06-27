@@ -4,7 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Hammer, LogIn, Moon, Sun } from 'lucide-react';
 
 export default function LoginPage() {
-  const { theme, toggleTheme } = useTheme();
+  const { isDark, toggleDark } = useTheme();
   const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -27,11 +27,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-950 px-4 transition-colors">
       <button
-        onClick={toggleTheme}
+        onClick={toggleDark}
         className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
-        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+        {isDark ? <Sun size={20} /> : <Moon size={20} />}
       </button>
       <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-md border border-gray-200 dark:border-gray-800 w-full max-w-sm transition-colors">
         <div className="flex items-center justify-center gap-3 mb-6">
