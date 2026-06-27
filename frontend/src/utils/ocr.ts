@@ -29,6 +29,7 @@ export interface ParsedFields {
   planned_start?: string;
   due_date?: string;
   status?: string;
+  confirmation_status?: string;
   notes?: string;
   tasks?: { task_name: string; qty_required: number; sort_order: number }[];
 }
@@ -122,7 +123,11 @@ export function parseWorkOrderForm(text: string): ParsedFields {
     /(?:due\s*date|deadline|completion\s*date|due)\s*[:.]?\s*([^\n]+)/i,
   ]));
 
-  const status = extractValue(text, [
+  const confirmationMatch = text.match(/confirmation\s+status\s*[:.]?\s*([^\n]+)/i);
+  const confirmation_status = confirmationMatch?.[1]?.trim();
+
+  const textNoConfirmation = lines.filter(l => !/confirmation/i.test(l)).join('\n');
+  const status = extractValue(textNoConfirmation, [
     /status\s*[:.]?\s*([^\n]+)/i,
   ]);
 
@@ -135,15 +140,21 @@ export function parseWorkOrderForm(text: string): ParsedFields {
     const line = lines[i].trim();
     if (/^tasks?\s*[:.]/i.test(line)) { inTasks = true; continue; }
     if (inTasks) {
-      if (/^\w+\s*[:.]/i.test(line) && !/^(?:-|\d+[.)])/.test(line)) break;
-      const taskMatch = line.match(/^(?:[\d]+[.)]\s*)?(.+?)(?:\s*\(?qty\s*[:.]?\s*(\d+)\)?)?$/i);
-      if (taskMatch && taskMatch[1]?.trim()) {
-        tasks.push({
-          task_name: taskMatch[1].trim(),
-          qty_required: taskMatch[2] ? parseInt(taskMatch[2]) : 1,
-          sort_order: tasks.length,
-        });
+      if (/^(?:notes?|status|identifiers|schedule|site)\s*[:.]/i.test(line)) break;
+      if (/^qty\s+required/i.test(line)) continue;
+      if (line.length < 2 || /^\d+[.)]\s*$/.test(line)) continue;
+      let qty = 1;
+      for (let j = 1; j <= 3 && i + j < lines.length; j++) {
+        const next = lines[i + j].trim();
+        const qm = next.match(/qty\s+required\s*[:.]?\s*(\d+)/i);
+        if (qm) { qty = parseInt(qm[1]); break; }
+        if (/^tasks?\s*[:.]/i.test(next)) break;
       }
+      tasks.push({
+        task_name: line,
+        qty_required: qty,
+        sort_order: tasks.length,
+      });
     }
   }
 
@@ -164,9 +175,21 @@ export function parseWorkOrderForm(text: string): ParsedFields {
     planned_start,
     due_date,
     status,
+    confirmation_status,
     notes,
     tasks: tasks.length > 0 ? tasks : undefined,
   };
+}
+
+const STATUS_OPTIONS = ['Open - Confirmed', 'Open - Unconfirmed', 'In Progress', 'Completed', 'Cancelled'] as const;
+
+function normalizeStatus(val: string): string {
+  for (const opt of STATUS_OPTIONS) {
+    if (opt.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(opt.toLowerCase())) {
+      return opt;
+    }
+  }
+  return val;
 }
 
 export function applyParsedFields(
@@ -190,7 +213,11 @@ export function applyParsedFields(
   if (parsed.earliest_start) updated.earliest_start = parsed.earliest_start;
   if (parsed.planned_start) updated.planned_start = parsed.planned_start;
   if (parsed.due_date) updated.due_date = parsed.due_date;
-  if (parsed.status) updated.status = parsed.status;
+  if (parsed.status) updated.status = normalizeStatus(parsed.status);
+  if (parsed.confirmation_status) {
+    const v = parsed.confirmation_status.toLowerCase();
+    updated.confirmation_status = v.includes('unconf') || v.includes('un-conf') ? 'Unconfirmed' : 'Confirmed';
+  }
   if (parsed.notes) updated.notes = parsed.notes;
   if (parsed.tasks) updated.tasks = parsed.tasks;
 
