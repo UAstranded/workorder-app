@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: workorder-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: workorders
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: workorder-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:${DB_PASSWORD:-postgres}@db:5432/workorders
+      SECRET_KEY: ${SECRET_KEY:-change-me-to-a-random-secret}
+      ACCESS_TOKEN_EXPIRE_MINUTES: "480"
+      UPLOAD_DIR: /app/uploads
+      CORS_ORIGINS: http://localhost:4170
+    volumes:
+      - ./data/uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: workorder-frontend
+    ports:
+      - "${PORT:-4170}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  seed:
+    build: ./backend
+    container_name: workorder-seed
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:${DB_PASSWORD:-postgres}@db:5432/workorders
+      SECRET_KEY: ${SECRET_KEY:-change-me-to-a-random-secret}
+    command: python seed.py
+    restart: "no"
