@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTimezone } from '../contexts/TimezoneContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { themes } from '../themes';
-import { LogOut, Plus, Clock, Moon, Sun, Settings, Palette } from 'lucide-react';
+import { LogOut, Clock, Moon, Sun, Settings, Palette } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout() {
@@ -29,9 +29,7 @@ export default function Layout() {
                 <img src="/logo-banner.png" alt="Logo" className="h-7 w-auto" />
                 <span className="text-base">Work Order Manager</span>
               </Link>
-              <Link to="/orders/new" className="btn-primary text-xs gap-1 px-3 py-1.5">
-                <Plus size={14} /> New
-              </Link>
+
             </div>
             <div className="flex items-center gap-2">
               <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
