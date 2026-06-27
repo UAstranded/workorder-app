@@ -6,38 +6,7 @@ import { useTimezone } from '../contexts/TimezoneContext';
 import { formatInTimeZone } from 'date-fns-tz';
 import ImageGallery from '../components/ImageGallery';
 import ExpensesSection from '../components/ExpensesSection';
-import { ArrowLeft, Edit, Trash2, Share2, Download, Phone, Clock, MoreHorizontal, Wrench } from 'lucide-react';
-
-function MobileActions({ onShare, onExport, onEdit, onDelete }: { onShare: () => void; onExport: () => void; onEdit: string; onDelete: () => void }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div>
-      <button onClick={() => setOpen(!open)} className="btn-secondary text-xs px-2">
-        <MoreHorizontal size={16} />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-20 w-40 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg py-1">
-            <button onClick={() => { setOpen(false); onShare(); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Share2 size={14} /> Share
-            </button>
-            <button onClick={() => { setOpen(false); onExport(); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Download size={14} /> Export
-            </button>
-            <Link to={onEdit} onClick={() => setOpen(false)} className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Edit size={14} /> Edit
-            </Link>
-            <button onClick={() => { setOpen(false); onDelete(); }} className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
-              <Trash2 size={14} /> Delete
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+import { ArrowLeft, Edit, Trash2, Share2, Download, Phone, Clock, Wrench } from 'lucide-react';
 
 export default function WorkOrderDetailPage() {
   const { reference } = useParams<{ reference: string }>();
@@ -117,19 +86,11 @@ export default function WorkOrderDetailPage() {
             {confBadge(wo.confirmation_status)}
           </div>
         </div>
-        <div className="hidden sm:flex gap-2">
-          <button onClick={handleShare} className="btn-secondary text-xs"><Share2 size={14} /> Share</button>
-          <button onClick={() => downloadExport(getExportUrl(wo.reference, displayTz), `work-order-${wo.reference}.xlsx`)} className="btn-secondary text-xs"><Download size={14} /> Export</button>
-          <Link to={`/orders/${wo.reference}/edit`} className="btn-primary text-xs"><Edit size={14} /> Edit</Link>
-          <button onClick={handleDelete} className="btn-danger text-xs"><Trash2 size={14} /> Delete</button>
-        </div>
-        <div className="relative sm:hidden">
-          <MobileActions
-            onShare={handleShare}
-            onExport={() => downloadExport(getExportUrl(wo.reference, displayTz), `work-order-${wo.reference}.xlsx`)}
-            onEdit={`/orders/${wo.reference}/edit`}
-            onDelete={handleDelete}
-          />
+        <div className="flex gap-2">
+          <button onClick={handleShare} className="btn-secondary text-xs"><Share2 size={14} /><span className="hidden sm:inline ml-1">Share</span></button>
+          <button onClick={() => downloadExport(getExportUrl(wo.reference, displayTz), `work-order-${wo.reference}.xlsx`)} className="btn-secondary text-xs"><Download size={14} /><span className="hidden sm:inline ml-1">Export</span></button>
+          <Link to={`/orders/${wo.reference}/edit`} className="btn-primary text-xs"><Edit size={14} /><span className="hidden sm:inline ml-1">Edit</span></Link>
+          <button onClick={handleDelete} className="btn-danger text-xs"><Trash2 size={14} /><span className="hidden sm:inline ml-1">Delete</span></button>
         </div>
       </div>
 
