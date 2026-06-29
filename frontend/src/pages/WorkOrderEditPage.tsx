@@ -29,6 +29,7 @@ export default function WorkOrderEditPage() {
     getWorkOrder(reference)
       .then((wo) => {
         setInitial({
+          reference: wo.reference,
           account_number: wo.account_number,
           invoice_number: wo.invoice_number,
           po_number: wo.po_number,

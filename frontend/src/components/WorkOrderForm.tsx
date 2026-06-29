@@ -150,7 +150,12 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
 
       <section className="card-accent p-5">
         <h2 className="card-header mb-4">Identifiers</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="space-y-4">
+          <div>
+            <label className={labelClass}>Reference</label>
+            <input className={inputClass('reference')} value={form.reference || ''} onChange={(e) => update('reference', e.target.value)} placeholder="Auto-generated if blank" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className={labelClass}>Account Number</label>
             <input className={inputClass('account_number')} value={form.account_number} onChange={(e) => update('account_number', e.target.value)} />
@@ -167,6 +172,7 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
             <label className={labelClass}>Dealer ID</label>
             <input className={inputClass('dealer_id')} value={form.dealer_id} onChange={(e) => update('dealer_id', e.target.value)} />
           </div>
+        </div>
         </div>
       </section>
 
