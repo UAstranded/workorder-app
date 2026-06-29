@@ -25,16 +25,30 @@ MIGRATIONS = [
 ]
 
 
+import asyncio
+
+
 async def init_db():
     from app.models.user import User
     from app.models.work_order import WorkOrder, Task
     from app.models.image import ImageAttachment, LabelSuggestion
     from app.models.expense import WorkOrderExpense
     from app.models.app_settings import AppSetting
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        for stmt in MIGRATIONS:
-            try:
-                await conn.execute(text(stmt))
-            except Exception:
-                pass  # column already exists or not applicable
+    from app.models.tech import WorkOrderTech
+
+    for attempt in range(10):
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+                for stmt in MIGRATIONS:
+                    try:
+                        await conn.execute(text(stmt))
+                    except Exception:
+                        pass
+            return
+        except Exception as e:
+            if attempt < 9:
+                print(f"DB connect attempt {attempt + 1} failed: {e}")
+                await asyncio.sleep(2 ** attempt)
+            else:
+                raise
