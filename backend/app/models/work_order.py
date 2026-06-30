@@ -50,6 +50,7 @@ class WorkOrder(Base):
 
     status: Mapped[WorkOrderStatus] = mapped_column(SAEnum(WorkOrderStatus), default=WorkOrderStatus.OPEN_UNCONFIRMED, nullable=False)
     confirmation_status: Mapped[ConfirmationStatus] = mapped_column(SAEnum(ConfirmationStatus), default=ConfirmationStatus.UNCONFIRMED, nullable=False)
+    google_event_id: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

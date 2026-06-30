@@ -22,6 +22,7 @@ async def get_db():
 
 MIGRATIONS = [
     "ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT ''",
+    "ALTER TABLE work_orders ADD COLUMN IF NOT EXISTS google_event_id VARCHAR(255) DEFAULT NULL",
 ]
 
 

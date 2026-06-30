@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getWorkOrder, deleteWorkOrder, getExportUrl, downloadExport } from '../api/workOrders';
+import client from '../api/client';
 import { WorkOrder as WorkOrderType } from '../types';
 import { useTimezone } from '../contexts/TimezoneContext';
 import { formatInTimeZone } from 'date-fns-tz';
 import ImageGallery from '../components/ImageGallery';
 import ExpensesSection from '../components/ExpensesSection';
-import { ArrowLeft, Edit, Trash2, Share2, Download, Phone, Clock, Wrench } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Share2, Download, Phone, Clock, Wrench, Calendar } from 'lucide-react';
 
 export default function WorkOrderDetailPage() {
   const { reference } = useParams<{ reference: string }>();
@@ -14,6 +15,7 @@ export default function WorkOrderDetailPage() {
   const { displayTz } = useTimezone();
   const [wo, setWo] = useState<WorkOrderType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (!reference) return;
@@ -28,6 +30,24 @@ export default function WorkOrderDetailPage() {
     if (!wo || !confirm('Delete this work order?')) return;
     await deleteWorkOrder(wo.reference);
     navigate('/');
+  };
+
+  const handleSyncCalendar = async () => {
+    if (!wo) return;
+    setSyncing(true);
+    try {
+      await client.post(`/calendar/sync/${wo.reference}`);
+      const updated = await getWorkOrder(wo.reference);
+      setWo(updated);
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || 'Sync failed';
+      if (msg.includes('not connected')) {
+        alert('Google Calendar not connected. Go to Settings to connect.');
+      } else {
+        alert(msg);
+      }
+    }
+    setSyncing(false);
   };
 
   const handleShare = async () => {
@@ -88,6 +108,7 @@ export default function WorkOrderDetailPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={handleShare} className="btn-secondary text-xs"><Share2 size={14} /><span className="hidden sm:inline ml-1">Share</span></button>
+          <button onClick={handleSyncCalendar} disabled={syncing} className="btn-secondary text-xs"><Calendar size={14} /><span className="hidden sm:inline ml-1">{syncing ? 'Syncing...' : 'Calendar'}</span></button>
           <button onClick={() => downloadExport(getExportUrl(wo.reference, displayTz), `work-order-${wo.reference}.xlsx`)} className="btn-secondary text-xs"><Download size={14} /><span className="hidden sm:inline ml-1">Export</span></button>
           <Link to={`/orders/${wo.reference}/edit`} className="btn-primary text-xs"><Edit size={14} /><span className="hidden sm:inline ml-1">Edit</span></Link>
           <button onClick={handleDelete} className="btn-danger text-xs"><Trash2 size={14} /><span className="hidden sm:inline ml-1">Delete</span></button>

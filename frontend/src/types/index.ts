@@ -45,6 +45,7 @@ export interface WorkOrder {
   techs: TechAssignment[];
   expenses: WorkOrderExpense[];
   image_count: number;
+  google_event_id: string | null;
 }
 
 export interface WorkOrderListEntry {

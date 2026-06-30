@@ -75,6 +75,7 @@ class ExpenseSchema(BaseModel):
 class WorkOrderResponse(WorkOrderBase):
     id: uuid.UUID
     reference: str
+    google_event_id: Optional[str] = None
     status: str
     confirmation_status: str
     site_timezone: str

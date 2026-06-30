@@ -15,6 +15,7 @@ from app.schemas.work_order import WorkOrderCreate, WorkOrderUpdate, WorkOrderRe
 from app.schemas.tech import TechSchema
 from app.models.expense import WorkOrderExpense
 from app.routers.auth import get_current_user
+from app.services import calendar_service
 
 router = APIRouter(prefix="/api/work-orders", tags=["work-orders"])
 
@@ -294,6 +295,16 @@ async def create_work_order(
 
     await db.commit()
     await db.refresh(wo)
+
+    if await calendar_service.is_connected(db):
+        try:
+            event_id = await calendar_service.create_event(wo, db)
+            if event_id:
+                wo.google_event_id = event_id
+                await db.commit()
+        except Exception:
+            pass
+
     return await get_work_order(wo.reference, db, user)
 
 
@@ -344,6 +355,19 @@ async def update_work_order(
 
     await db.commit()
     await db.refresh(wo)
+
+    if await calendar_service.is_connected(db):
+        try:
+            if wo.google_event_id:
+                await calendar_service.update_event(wo, db)
+            else:
+                event_id = await calendar_service.create_event(wo, db)
+                if event_id:
+                    wo.google_event_id = event_id
+                    await db.commit()
+        except Exception:
+            pass
+
     return await get_work_order(wo.reference, db, user)
 
 
@@ -361,5 +385,13 @@ async def delete_work_order(
     if not wo:
         raise HTTPException(status_code=404, detail="Work order not found")
 
+    event_id = wo.google_event_id
+
     await db.delete(wo)
     await db.commit()
+
+    if event_id and await calendar_service.is_connected(db):
+        try:
+            await calendar_service.delete_event(event_id, db)
+        except Exception:
+            pass

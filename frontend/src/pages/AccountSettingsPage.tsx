@@ -1,7 +1,7 @@
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import client from '../api/client';
-import { Save } from 'lucide-react';
+import { Save, Calendar } from 'lucide-react';
 
 export default function AccountSettingsPage() {
   const { user, logout } = useAuth();
@@ -11,6 +11,34 @@ export default function AccountSettingsPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [calendarConnected, setCalendarConnected] = useState(false);
+  const [calendarLoading, setCalendarLoading] = useState(true);
+
+  useEffect(() => {
+    client.get('/calendar/status')
+      .then(({ data }) => setCalendarConnected(data.connected))
+      .catch(() => {})
+      .finally(() => setCalendarLoading(false));
+  }, []);
+
+  const connectCalendar = async () => {
+    try {
+      const { data } = await client.get('/calendar/auth');
+      window.location.href = data.auth_url;
+    } catch {
+      setError('Failed to start Google Calendar auth');
+    }
+  };
+
+  const disconnectCalendar = async () => {
+    try {
+      await client.post('/calendar/disconnect');
+      setCalendarConnected(false);
+      setMessage('Calendar disconnected');
+    } catch {
+      setError('Failed to disconnect calendar');
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -73,6 +101,30 @@ export default function AccountSettingsPage() {
               <input type="password" className="input-field" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
             </div>
           </div>
+        </section>
+
+        <section className="card-accent p-5">
+          <h2 className="card-header mb-4">Google Calendar</h2>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+            Sync work orders to a shared Google Calendar. Events are created from due dates, scheduled dates, and tasks.
+          </p>
+          {calendarLoading ? (
+            <p className="text-sm text-gray-400 dark:text-gray-500">Checking connection...</p>
+          ) : calendarConnected ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <Calendar size={16} />
+                <span>Connected</span>
+              </div>
+              <button type="button" onClick={disconnectCalendar} className="btn-danger text-xs">
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <button type="button" onClick={connectCalendar} className="btn-primary text-xs">
+              <Calendar size={14} /> Connect Google Calendar
+            </button>
+          )}
         </section>
 
         <div className="flex justify-end gap-3">
