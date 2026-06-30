@@ -42,3 +42,8 @@ app.include_router(public_router)
 app.include_router(export_router)
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok"}

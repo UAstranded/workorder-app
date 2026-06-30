@@ -36,7 +36,7 @@ async def init_db():
     from app.models.app_settings import AppSetting
     from app.models.tech import WorkOrderTech
 
-    for attempt in range(10):
+    for attempt in range(15):
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
@@ -47,8 +47,8 @@ async def init_db():
                         pass
             return
         except Exception as e:
-            if attempt < 9:
+            if attempt < 14:
                 print(f"DB connect attempt {attempt + 1} failed: {e}")
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(min(2 ** attempt, 30))
             else:
                 raise
