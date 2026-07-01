@@ -16,6 +16,17 @@ SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 TOKEN_KEY = "google_calendar_tokens"
 CALENDAR_ID_KEY = "google_calendar_id"
+TEMPLATE_KEY = "calendar_event_template"
+
+DEFAULT_SUMMARY_TEMPLATE = "[{reference}] {location}"
+DEFAULT_DESCRIPTION_TEMPLATE = """Work Order: {reference}
+Account: {account}
+Location: {location}
+Address: {address}
+Status: {status}
+Link: {link}
+{tasks}
+{techs}"""
 
 
 def get_flow(state: Optional[str] = None) -> Flow:
@@ -133,6 +144,56 @@ async def is_connected(db: AsyncSession) -> bool:
     return await _load_credentials(db) is not None
 
 
+TEMPLATE_PLACEHOLDERS = {
+    "reference": "Work order reference number",
+    "location": "Location name",
+    "account": "Account number",
+    "address": "Full address (line1, city, state)",
+    "status": "Work order status",
+    "tasks": "Task list (one per line)",
+    "techs": "Tech names (comma-separated)",
+    "link": "Public URL to the work order",
+}
+
+
+async def _get_template(db: AsyncSession) -> dict:
+    from app.models.app_settings import AppSetting
+
+    result = await db.execute(select(AppSetting).where(AppSetting.key == TEMPLATE_KEY))
+    row = result.scalar_one_or_none()
+    if row and row.value:
+        try:
+            return json.loads(row.value)
+        except Exception:
+            pass
+    return {"summary": DEFAULT_SUMMARY_TEMPLATE, "description": DEFAULT_DESCRIPTION_TEMPLATE}
+
+
+async def _save_template(template: dict, db: AsyncSession) -> None:
+    from app.models.app_settings import AppSetting
+
+    result = await db.execute(select(AppSetting).where(AppSetting.key == TEMPLATE_KEY))
+    row = result.scalar_one_or_none()
+    value = json.dumps(template)
+    if row:
+        row.value = value
+    else:
+        db.add(AppSetting(key=TEMPLATE_KEY, value=value))
+    await db.commit()
+
+
+def _render_template(template_str: str, work_order, tasks_text: str, techs_text: str) -> str:
+    address = f"{work_order.address_line1 or ''}, {work_order.city or ''}, {work_order.state or ''}".strip(", ")
+    return template_str.replace("{reference}", work_order.reference or "") \
+        .replace("{location}", work_order.location_name or "No Location") \
+        .replace("{account}", work_order.account_number or "-") \
+        .replace("{address}", address) \
+        .replace("{status}", work_order.status or "-") \
+        .replace("{tasks}", tasks_text) \
+        .replace("{techs}", techs_text) \
+        .replace("{link}", f"{PUBLIC_URL}/orders/{work_order.reference}")
+
+
 async def ensure_calendar_exists(db: AsyncSession) -> str:
     service = await _get_service(db)
     if not service:
@@ -159,29 +220,26 @@ async def ensure_calendar_exists(db: AsyncSession) -> str:
         return GOOGLE_CALENDAR_ID
 
 
-def _build_event_body(work_order, start_dt, end_dt):
+def _build_event_body(work_order, start_dt, end_dt, template: Optional[dict] = None):
     tasks_text = ""
     if hasattr(work_order, "tasks") and work_order.tasks:
-        tasks_text = "\n\nTasks:\n" + "\n".join(
+        tasks_text = "\n".join(
             f"- {t.task_name} (x{t.qty_required})" for t in work_order.tasks
         )
 
     techs_text = ""
     if hasattr(work_order, "techs") and work_order.techs:
-        techs_text = "\n\nTechs: " + ", ".join(t.tech_name for t in work_order.techs)
+        techs_text = "Techs: " + ", ".join(t.tech_name for t in work_order.techs)
+
+    summary_tpl = (template or {}).get("summary", DEFAULT_SUMMARY_TEMPLATE)
+    desc_tpl = (template or {}).get("description", DEFAULT_DESCRIPTION_TEMPLATE)
+
+    summary = _render_template(summary_tpl, work_order, tasks_text, techs_text)
+    description = _render_template(desc_tpl, work_order, tasks_text, techs_text)
 
     return {
-        "summary": f"[{work_order.reference}] {work_order.location_name or 'No Location'}",
-        "description": (
-            f"Work Order: {work_order.reference}\n"
-            f"Account: {work_order.account_number or '-'}\n"
-            f"Location: {work_order.location_name or '-'}\n"
-            f"Address: {work_order.address_line1 or ''} {work_order.city or ''} {work_order.state or ''}\n"
-            f"Status: {work_order.status or '-'}\n"
-            f"Link: {PUBLIC_URL}/orders/{work_order.reference}"
-            f"{tasks_text}"
-            f"{techs_text}"
-        ),
+        "summary": summary,
+        "description": description,
         "location": f"{work_order.address_line1 or ''}, {work_order.city or ''}, {work_order.state or ''}".strip(", "),
         "start": {
             "dateTime": start_dt.isoformat(),
@@ -201,6 +259,7 @@ async def create_event(work_order, db: AsyncSession) -> Optional[str]:
         return None
 
     calendar_id = await ensure_calendar_exists(db)
+    template = await _get_template(db)
 
     start_dt = work_order.earliest_start or work_order.planned_start or work_order.due_date
     end_dt = work_order.due_date or work_order.planned_start or work_order.earliest_start
@@ -211,7 +270,7 @@ async def create_event(work_order, db: AsyncSession) -> Optional[str]:
     if not end_dt or end_dt <= start_dt:
         end_dt = start_dt + timedelta(hours=2)
 
-    event = _build_event_body(work_order, start_dt, end_dt)
+    event = _build_event_body(work_order, start_dt, end_dt, template)
 
     try:
         created = service.events().insert(calendarId=calendar_id, body=event).execute()
@@ -229,6 +288,7 @@ async def update_event(work_order, db: AsyncSession) -> Optional[str]:
         return None
 
     calendar_id = await _get_calendar_id(db)
+    template = await _get_template(db)
 
     start_dt = work_order.earliest_start or work_order.planned_start or work_order.due_date
     end_dt = work_order.due_date or work_order.planned_start or work_order.earliest_start
@@ -240,7 +300,7 @@ async def update_event(work_order, db: AsyncSession) -> Optional[str]:
     if not end_dt or end_dt <= start_dt:
         end_dt = start_dt + timedelta(hours=2)
 
-    event = _build_event_body(work_order, start_dt, end_dt)
+    event = _build_event_body(work_order, start_dt, end_dt, template)
 
     try:
         updated = service.events().update(

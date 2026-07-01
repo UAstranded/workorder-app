@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import client from '../api/client';
-import { Save, Calendar } from 'lucide-react';
+import { Save, Calendar, FileText } from 'lucide-react';
 
 export default function AccountSettingsPage() {
   const { user, logout } = useAuth();
@@ -13,12 +13,27 @@ export default function AccountSettingsPage() {
   const [loading, setLoading] = useState(false);
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [calendarLoading, setCalendarLoading] = useState(true);
+  const [templateSummary, setTemplateSummary] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [templatePlaceholders, setTemplatePlaceholders] = useState<Record<string, string>>({});
+  const [templateMessage, setTemplateMessage] = useState('');
+  const [templateSaving, setTemplateSaving] = useState(false);
 
   useEffect(() => {
     client.get('/calendar/status')
       .then(({ data }) => setCalendarConnected(data.connected))
       .catch(() => {})
       .finally(() => setCalendarLoading(false));
+  }, []);
+
+  useEffect(() => {
+    client.get('/calendar/template')
+      .then(({ data }) => {
+        setTemplateSummary(data.template.summary || '');
+        setTemplateDescription(data.template.description || '');
+        setTemplatePlaceholders(data.placeholders || {});
+      })
+      .catch(() => {});
   }, []);
 
   const connectCalendar = async () => {
@@ -38,6 +53,30 @@ export default function AccountSettingsPage() {
     } catch {
       setError('Failed to disconnect calendar');
     }
+  };
+
+  const saveTemplate = async () => {
+    setTemplateMessage('');
+    setTemplateSaving(true);
+    try {
+      await client.put('/calendar/template', {
+        template: { summary: templateSummary, description: templateDescription },
+      });
+      setTemplateMessage('Template saved');
+    } catch {
+      setTemplateMessage('Failed to save template');
+    } finally {
+      setTemplateSaving(false);
+    }
+  };
+
+  const resetTemplate = async () => {
+    try {
+      const { data } = await client.get('/calendar/template');
+      const def = data.template;
+      setTemplateSummary(def.summary || '');
+      setTemplateDescription(def.description || '');
+    } catch {}
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -63,7 +102,7 @@ export default function AccountSettingsPage() {
   };
 
   return (
-    <div className="max-w-lg">
+    <div className="max-w-2xl">
       <h1 className="text-xl font-display font-bold text-gray-900 dark:text-gray-100 tracking-tight mb-6">Account Settings</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -126,6 +165,50 @@ export default function AccountSettingsPage() {
             </button>
           )}
         </section>
+
+        {calendarConnected && (
+          <section className="card-accent p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="card-header mb-0">Calendar Event Template</h2>
+              <button type="button" onClick={resetTemplate} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline">Reset to defaults</button>
+            </div>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+              Customize how events appear in Google Calendar. Use <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{'\{placeholder\}'}</code> to insert work order data.
+            </p>
+
+            {templateMessage && (
+              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 text-sm p-3 rounded-md mb-4">{templateMessage}</div>
+            )}
+
+            <div className="space-y-4 mb-4">
+              <div>
+                <label className="section-label block mb-1">Event Summary</label>
+                <input className="input-field font-mono text-sm" value={templateSummary} onChange={(e) => setTemplateSummary(e.target.value)} />
+              </div>
+              <div>
+                <label className="section-label block mb-1">Event Description</label>
+                <textarea className="input-field font-mono text-sm" rows={6} value={templateDescription} onChange={(e) => setTemplateDescription(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-md p-3 mb-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Available placeholders:</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {Object.entries(templatePlaceholders).map(([key, desc]) => (
+                  <div key={key} className="text-xs text-gray-500 dark:text-gray-400">
+                    <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{'{' + key + '}'}</code> — {desc}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button type="button" onClick={saveTemplate} disabled={templateSaving} className="btn-primary text-xs">
+                <FileText size={14} /> {templateSaving ? 'Saving...' : 'Save Template'}
+              </button>
+            </div>
+          </section>
+        )}
 
         <div className="flex justify-end gap-3">
           <button type="submit" disabled={loading} className="btn-primary">

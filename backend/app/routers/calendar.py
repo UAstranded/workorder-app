@@ -68,6 +68,29 @@ async def sync_work_order_to_calendar(
         raise HTTPException(status_code=400, detail="Calendar not connected. Connect in Settings first.")
 
 
+@router.get("/template")
+async def get_calendar_template(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    template = await calendar_service._get_template(db)
+    return {
+        "template": template,
+        "placeholders": calendar_service.TEMPLATE_PLACEHOLDERS,
+    }
+
+
+@router.put("/template")
+async def update_calendar_template(
+    body: dict,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    template = body.get("template", {})
+    await calendar_service._save_template(template, db)
+    return {"status": "saved", "template": template}
+
+
 @router.post("/disconnect")
 async def disconnect_calendar(
     user: User = Depends(get_current_user),
