@@ -41,13 +41,6 @@ async def init_db():
 
     for attempt in range(15):
         try:
-            async with engine.connect() as conn:
-                await conn.execution_options(isolation_level="AUTOCOMMIT")
-                try:
-                    await conn.execute(text("ALTER TYPE workorderstatus ADD VALUE IF NOT EXISTS 'Open'"))
-                except Exception:
-                    pass
-
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
                 for stmt in MIGRATIONS:
@@ -56,7 +49,7 @@ async def init_db():
                     except Exception:
                         pass
                 await conn.execute(
-                    text("UPDATE work_orders SET status = 'Open' WHERE status IN ('Open - Confirmed', 'Open - Unconfirmed')")
+                    text("UPDATE work_orders SET status = 'Open' WHERE status IN ('OPEN_CONFIRMED', 'OPEN_UNCONFIRMED')")
                 )
             return
         except Exception as e:
