@@ -5,6 +5,7 @@ import { Plus, Trash2, Save, Scan } from 'lucide-react';
 import TechsSection from './TechsSection';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { scanImage, parseWorkOrderForm, applyParsedFields } from '../utils/ocr';
+import { formatPhone } from '../utils/format';
 
 interface Props {
   initial?: WorkOrderFormData;
@@ -192,7 +193,7 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
           </div>
           <div>
             <label className={labelClass}>Primary Phone</label>
-            <input className={inputClass('primary_phone')} value={form.primary_phone} onChange={(e) => update('primary_phone', e.target.value)} placeholder="(555) 123-4567" />
+            <input className={inputClass('primary_phone')} value={form.primary_phone} onChange={(e) => update('primary_phone', e.target.value)} onBlur={(e) => update('primary_phone', formatPhone(e.target.value))} placeholder="(555) 123-4567" />
           </div>
           <div className="sm:col-span-2">
             <label className={labelClass}>Address Line 1</label>

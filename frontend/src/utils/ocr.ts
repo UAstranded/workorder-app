@@ -1,5 +1,6 @@
 import Tesseract from 'tesseract.js';
 import { WorkOrderFormData } from '../types';
+import { formatPhone } from './format';
 
 export async function scanImage(file: File): Promise<string> {
   const { data } = await Tesseract.recognize(file, 'eng', {
@@ -217,7 +218,7 @@ export function applyParsedFields(
   if (parsed.city) updated.city = parsed.city;
   if (parsed.state) updated.state = parsed.state;
   if (parsed.zip) updated.zip = parsed.zip;
-  if (parsed.primary_phone) updated.primary_phone = parsed.primary_phone;
+  if (parsed.primary_phone) updated.primary_phone = formatPhone(parsed.primary_phone);
   if (parsed.earliest_start) updated.earliest_start = parsed.earliest_start;
   if (parsed.planned_start) updated.planned_start = parsed.planned_start;
   if (parsed.due_date) updated.due_date = parsed.due_date;

@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getWorkOrder, deleteWorkOrder, getExportUrl, downloadExport } from '../api/workOrders';
 import client from '../api/client';
 import { WorkOrder as WorkOrderType } from '../types';
+import { formatPhone } from '../utils/format';
 import { useTimezone } from '../contexts/TimezoneContext';
 import { formatInTimeZone } from 'date-fns-tz';
 import ImageGallery from '../components/ImageGallery';
@@ -149,7 +150,7 @@ export default function WorkOrderDetailPage() {
                 <span className="section-label block mb-0.5">Phone</span>
                 {wo.primary_phone ? (
                   <a href={`tel:${wo.primary_phone}`} className="font-medium text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1 text-sm">
-                    <Phone size={13} /> {wo.primary_phone}
+                    <Phone size={13} /> {formatPhone(wo.primary_phone)}
                   </a>
                 ) : <p className="font-medium text-gray-900 dark:text-gray-100">-</p>}
               </div>
