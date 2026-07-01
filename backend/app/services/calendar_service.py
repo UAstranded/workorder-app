@@ -152,8 +152,15 @@ TEMPLATE_PLACEHOLDERS = {
     "reference": "Work order reference number",
     "location": "Location name",
     "account": "Account number",
+    "invoice": "Invoice number",
+    "po_number": "PO number",
+    "dealer_id": "Dealer ID",
+    "site_contact": "Site contact name",
+    "primary_phone": "Primary phone number",
     "address": "Full address (line1, city, state)",
+    "notes": "Work order notes",
     "status": "Work order status",
+    "confirmation_status": "Confirmation status",
     "earliest_start": "Earliest start date/time",
     "planned_start": "Planned start date/time",
     "due_date": "Due date",
@@ -202,11 +209,19 @@ def _fmt_dt(dt) -> str:
 
 def _render_template(template_str: str, work_order, tasks_text: str, techs_text: str) -> str:
     address = f"{work_order.address_line1 or ''}, {work_order.city or ''}, {work_order.state or ''}".strip(", ")
-    return template_str.replace("{reference}", work_order.reference or "") \
+    return template_str \
+        .replace("{reference}", work_order.reference or "") \
         .replace("{location}", work_order.location_name or "No Location") \
         .replace("{account}", work_order.account_number or "-") \
+        .replace("{invoice}", work_order.invoice_number or "-") \
+        .replace("{po_number}", work_order.po_number or "-") \
+        .replace("{dealer_id}", work_order.dealer_id or "-") \
+        .replace("{site_contact}", work_order.site_contact or "-") \
+        .replace("{primary_phone}", work_order.primary_phone or "-") \
         .replace("{address}", address) \
+        .replace("{notes}", work_order.notes or "") \
         .replace("{status}", work_order.status or "-") \
+        .replace("{confirmation_status}", work_order.confirmation_status or "-") \
         .replace("{earliest_start}", _fmt_dt(work_order.earliest_start)) \
         .replace("{planned_start}", _fmt_dt(work_order.planned_start)) \
         .replace("{due_date}", _fmt_dt(work_order.due_date)) \
