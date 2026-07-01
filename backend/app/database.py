@@ -49,7 +49,7 @@ async def init_db():
                     except Exception:
                         pass
                 await conn.execute(
-                    text("UPDATE work_orders SET status = 'Open' WHERE status IN ('OPEN_CONFIRMED', 'OPEN_UNCONFIRMED')")
+                    text("UPDATE work_orders SET status = 'OPEN' WHERE status IN ('OPEN_CONFIRMED', 'OPEN_UNCONFIRMED')")
                 )
             return
         except Exception as e:
