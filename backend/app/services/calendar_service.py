@@ -194,6 +194,29 @@ def _render_template(template_str: str, work_order, tasks_text: str, techs_text:
         .replace("{link}", f"{PUBLIC_URL}/orders/{work_order.reference}")
 
 
+async def list_calendars(db: AsyncSession) -> list:
+    service = await _get_service(db)
+    if not service:
+        return []
+
+    selected_id = await _get_calendar_id(db)
+    try:
+        cal_list = service.calendarList().list().execute()
+        items = []
+        for cal in cal_list.get("items", []):
+            items.append({
+                "id": cal["id"],
+                "summary": cal.get("summary", cal["id"]),
+                "selected": cal["id"] == selected_id or (
+                    selected_id == "primary" and cal.get("primary")
+                ),
+            })
+        items.sort(key=lambda c: (not c["selected"], c["summary"].lower()))
+        return items
+    except HttpError:
+        return []
+
+
 async def ensure_calendar_exists(db: AsyncSession) -> str:
     service = await _get_service(db)
     if not service:
@@ -204,18 +227,6 @@ async def ensure_calendar_exists(db: AsyncSession) -> str:
     try:
         cal = service.calendars().get(calendarId=calendar_id).execute()
         return cal["id"]
-    except HttpError:
-        pass
-
-    try:
-        cal = {
-            "summary": "Work Orders",
-            "description": "Calendar synced from Work Order Manager",
-            "timeZone": "America/New_York",
-        }
-        created = service.calendars().insert(body=cal).execute()
-        await _save_calendar_id(created["id"], db)
-        return created["id"]
     except HttpError:
         return GOOGLE_CALENDAR_ID
 

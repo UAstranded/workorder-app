@@ -1,7 +1,13 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import client from '../api/client';
-import { Save, Calendar, FileText } from 'lucide-react';
+import { Save, Calendar, FileText, RefreshCw } from 'lucide-react';
+
+interface CalendarItem {
+  id: string;
+  summary: string;
+  selected: boolean;
+}
 
 export default function AccountSettingsPage() {
   const { user, logout } = useAuth();
@@ -13,18 +19,32 @@ export default function AccountSettingsPage() {
   const [loading, setLoading] = useState(false);
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendars, setCalendars] = useState<CalendarItem[]>([]);
+  const [selectedCalendarId, setSelectedCalendarId] = useState('primary');
   const [templateSummary, setTemplateSummary] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [templatePlaceholders, setTemplatePlaceholders] = useState<Record<string, string>>({});
   const [templateMessage, setTemplateMessage] = useState('');
   const [templateSaving, setTemplateSaving] = useState(false);
 
-  useEffect(() => {
+  const loadCalendarStatus = () => {
+    setCalendarLoading(true);
     client.get('/calendar/status')
-      .then(({ data }) => setCalendarConnected(data.connected))
+      .then(({ data }) => {
+        setCalendarConnected(data.connected);
+        if (data.connected) {
+          return client.get('/calendar/list').then(({ data: listData }) => {
+            setCalendars(listData.calendars);
+            const sel = listData.calendars.find((c: CalendarItem) => c.selected);
+            if (sel) setSelectedCalendarId(sel.id);
+          });
+        }
+      })
       .catch(() => {})
       .finally(() => setCalendarLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadCalendarStatus(); }, []);
 
   useEffect(() => {
     client.get('/calendar/template')
@@ -52,6 +72,16 @@ export default function AccountSettingsPage() {
       setMessage('Calendar disconnected');
     } catch {
       setError('Failed to disconnect calendar');
+    }
+  };
+
+  const changeCalendar = async (calendarId: string) => {
+    setSelectedCalendarId(calendarId);
+    try {
+      await client.put('/calendar/select', { calendar_id: calendarId });
+      setMessage('Calendar updated');
+    } catch {
+      setError('Failed to change calendar');
     }
   };
 
@@ -150,14 +180,36 @@ export default function AccountSettingsPage() {
           {calendarLoading ? (
             <p className="text-sm text-gray-400 dark:text-gray-500">Checking connection...</p>
           ) : calendarConnected ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                <Calendar size={16} />
-                <span>Connected</span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                  <Calendar size={16} />
+                  <span>Connected</span>
+                </div>
+                <button type="button" onClick={disconnectCalendar} className="btn-danger text-xs">
+                  Disconnect
+                </button>
               </div>
-              <button type="button" onClick={disconnectCalendar} className="btn-danger text-xs">
-                Disconnect
-              </button>
+              <div className="flex items-center gap-3">
+                <label className="section-label text-sm whitespace-nowrap">Target calendar:</label>
+                <select
+                  className="input-field text-sm flex-1"
+                  value={selectedCalendarId}
+                  onChange={(e) => changeCalendar(e.target.value)}
+                >
+                  {calendars.map((cal) => (
+                    <option key={cal.id} value={cal.id}>{cal.summary}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={loadCalendarStatus}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  title="Refresh calendar list"
+                >
+                  <RefreshCw size={15} />
+                </button>
+              </div>
             </div>
           ) : (
             <button type="button" onClick={connectCalendar} className="btn-primary text-xs">
