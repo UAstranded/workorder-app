@@ -40,6 +40,9 @@ class WorkOrderBase(BaseModel):
     planned_start: Optional[datetime] = None
     due_date: Optional[datetime] = None
 
+    calendar_start: Optional[datetime] = None
+    calendar_end: Optional[datetime] = None
+
     site_timezone: Optional[str] = "America/New_York"
 
     notes: Optional[str] = ""

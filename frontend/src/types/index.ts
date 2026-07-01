@@ -33,6 +33,8 @@ export interface WorkOrder {
   earliest_start: string | null;
   planned_start: string | null;
   due_date: string | null;
+  calendar_start: string | null;
+  calendar_end: string | null;
   site_timezone: string;
   notes: string;
   status: string;
@@ -61,6 +63,8 @@ export interface WorkOrderListEntry {
   earliest_start: string | null;
   planned_start: string | null;
   due_date: string | null;
+  calendar_start: string | null;
+  calendar_end: string | null;
   site_timezone: string;
   created_at: string;
   updated_at: string;
@@ -119,6 +123,8 @@ export interface WorkOrderFormData {
   earliest_start: string;
   planned_start: string;
   due_date: string;
+  calendar_start: string;
+  calendar_end: string;
   site_timezone: string;
   notes: string;
   status: string;

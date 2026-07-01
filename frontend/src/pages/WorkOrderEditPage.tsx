@@ -45,6 +45,8 @@ export default function WorkOrderEditPage() {
           earliest_start: toLocalDatetime(wo.earliest_start, wo.site_timezone),
           planned_start: toLocalDatetime(wo.planned_start, wo.site_timezone),
           due_date: toLocalDatetime(wo.due_date, wo.site_timezone),
+          calendar_start: toLocalDatetime(wo.calendar_start, wo.site_timezone),
+          calendar_end: toLocalDatetime(wo.calendar_end, wo.site_timezone),
           site_timezone: wo.site_timezone,
           notes: wo.notes || '',
           status: wo.status,

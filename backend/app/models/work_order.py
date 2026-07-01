@@ -44,6 +44,9 @@ class WorkOrder(Base):
     planned_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    calendar_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    calendar_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+
     notes: Mapped[str] = mapped_column(Text, nullable=True, default="")
 
     site_timezone: Mapped[str] = mapped_column(String(100), nullable=True, default="America/New_York")

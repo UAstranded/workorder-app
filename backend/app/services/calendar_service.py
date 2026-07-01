@@ -157,6 +157,8 @@ TEMPLATE_PLACEHOLDERS = {
     "earliest_start": "Earliest start date/time",
     "planned_start": "Planned start date/time",
     "due_date": "Due date",
+    "calendar_start": "Calendar event start date/time",
+    "calendar_end": "Calendar event end date/time",
     "site_timezone": "Site timezone",
     "tasks": "Task list (one per line)",
     "techs": "Tech names (comma-separated)",
@@ -208,6 +210,8 @@ def _render_template(template_str: str, work_order, tasks_text: str, techs_text:
         .replace("{earliest_start}", _fmt_dt(work_order.earliest_start)) \
         .replace("{planned_start}", _fmt_dt(work_order.planned_start)) \
         .replace("{due_date}", _fmt_dt(work_order.due_date)) \
+        .replace("{calendar_start}", _fmt_dt(work_order.calendar_start)) \
+        .replace("{calendar_end}", _fmt_dt(work_order.calendar_end)) \
         .replace("{site_timezone}", work_order.site_timezone or "-") \
         .replace("{tasks}", tasks_text) \
         .replace("{techs}", techs_text) \
@@ -292,8 +296,8 @@ async def create_event(work_order, db: AsyncSession) -> Optional[str]:
     calendar_id = await ensure_calendar_exists(db)
     template = await _get_template(db)
 
-    start_dt = work_order.earliest_start or work_order.planned_start or work_order.due_date
-    end_dt = work_order.due_date or work_order.planned_start or work_order.earliest_start
+    start_dt = work_order.calendar_start or work_order.earliest_start or work_order.planned_start or work_order.due_date
+    end_dt = work_order.calendar_end or work_order.due_date or work_order.planned_start or work_order.earliest_start
 
     if not start_dt:
         return None
@@ -321,8 +325,8 @@ async def update_event(work_order, db: AsyncSession) -> Optional[str]:
     calendar_id = await _get_calendar_id(db)
     template = await _get_template(db)
 
-    start_dt = work_order.earliest_start or work_order.planned_start or work_order.due_date
-    end_dt = work_order.due_date or work_order.planned_start or work_order.earliest_start
+    start_dt = work_order.calendar_start or work_order.earliest_start or work_order.planned_start or work_order.due_date
+    end_dt = work_order.calendar_end or work_order.due_date or work_order.planned_start or work_order.earliest_start
 
     if not start_dt:
         await delete_event(work_order.google_event_id, db)

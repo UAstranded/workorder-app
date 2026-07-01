@@ -17,6 +17,7 @@ const emptyForm = (): WorkOrderFormData => ({
   location_name: '', site_contact: '', address_line1: '', address_line2: '',
   city: '', state: '', zip: '', primary_phone: '',
   earliest_start: '', planned_start: '', due_date: '',
+  calendar_start: '', calendar_end: '',
   site_timezone: 'America/New_York',
   notes: '',
   status: 'Open - Unconfirmed',
@@ -121,6 +122,8 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
       earliest_start: form.earliest_start ? toUtc(form.earliest_start, form.site_timezone) : null as any,
       planned_start: form.planned_start ? toUtc(form.planned_start, form.site_timezone) : null as any,
       due_date: form.due_date ? toUtc(form.due_date, form.site_timezone) : null as any,
+      calendar_start: form.calendar_start ? toUtc(form.calendar_start, form.site_timezone) : null as any,
+      calendar_end: form.calendar_end ? toUtc(form.calendar_end, form.site_timezone) : null as any,
       tasks: form.tasks.filter((t) => t.task_name.trim()),
       techs: form.techs.filter((t) => t.tech_name.trim()),
     };
@@ -231,6 +234,30 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
               />
             </div>
           ))}
+        </div>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mb-4">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Calendar Event</h3>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">Optionally override the event times shown in Google Calendar. Leave blank to use the schedule dates above.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Event Start</label>
+              <input
+                type="datetime-local"
+                className={inputClass('calendar_start')}
+                value={form.calendar_start || ''}
+                onChange={(e) => update('calendar_start', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Event End</label>
+              <input
+                type="datetime-local"
+                className={inputClass('calendar_end')}
+                value={form.calendar_end || ''}
+                onChange={(e) => update('calendar_end', e.target.value)}
+              />
+            </div>
+          </div>
         </div>
         <div>
           <label className={labelClass}>Site Timezone</label>
