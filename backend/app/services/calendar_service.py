@@ -23,6 +23,10 @@ DEFAULT_DESCRIPTION_TEMPLATE = """Work Order: {reference}
 Account: {account}
 Location: {location}
 Address: {address}
+Earliest Start: {earliest_start}
+Planned Start: {planned_start}
+Due Date: {due_date}
+Timezone: {site_timezone}
 Status: {status}
 Link: {link}
 {tasks}
@@ -150,6 +154,10 @@ TEMPLATE_PLACEHOLDERS = {
     "account": "Account number",
     "address": "Full address (line1, city, state)",
     "status": "Work order status",
+    "earliest_start": "Earliest start date/time",
+    "planned_start": "Planned start date/time",
+    "due_date": "Due date",
+    "site_timezone": "Site timezone",
     "tasks": "Task list (one per line)",
     "techs": "Tech names (comma-separated)",
     "link": "Public URL to the work order",
@@ -182,6 +190,14 @@ async def _save_template(template: dict, db: AsyncSession) -> None:
     await db.commit()
 
 
+def _fmt_dt(dt) -> str:
+    if dt is None:
+        return "-"
+    if hasattr(dt, "strftime"):
+        return dt.strftime("%Y-%m-%d %H:%M")
+    return str(dt)
+
+
 def _render_template(template_str: str, work_order, tasks_text: str, techs_text: str) -> str:
     address = f"{work_order.address_line1 or ''}, {work_order.city or ''}, {work_order.state or ''}".strip(", ")
     return template_str.replace("{reference}", work_order.reference or "") \
@@ -189,6 +205,10 @@ def _render_template(template_str: str, work_order, tasks_text: str, techs_text:
         .replace("{account}", work_order.account_number or "-") \
         .replace("{address}", address) \
         .replace("{status}", work_order.status or "-") \
+        .replace("{earliest_start}", _fmt_dt(work_order.earliest_start)) \
+        .replace("{planned_start}", _fmt_dt(work_order.planned_start)) \
+        .replace("{due_date}", _fmt_dt(work_order.due_date)) \
+        .replace("{site_timezone}", work_order.site_timezone or "-") \
         .replace("{tasks}", tasks_text) \
         .replace("{techs}", techs_text) \
         .replace("{link}", f"{PUBLIC_URL}/orders/{work_order.reference}")
