@@ -6,7 +6,7 @@ import { useTimezone } from '../contexts/TimezoneContext';
 import { formatInTimeZone } from 'date-fns-tz';
 import { Search, Download, Trash2, Eye, Edit, ChevronUp, ChevronDown, Plus } from 'lucide-react';
 
-const statusOptions = ['', 'Open - Confirmed', 'Open - Unconfirmed', 'In Progress', 'Completed', 'Cancelled'];
+const statusOptions = ['', 'Open', 'In Progress', 'Completed', 'Cancelled'];
 const confirmationOptions = ['', 'Confirmed', 'Unconfirmed'];
 
 export default function DashboardPage() {

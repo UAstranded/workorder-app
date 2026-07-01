@@ -13,6 +13,7 @@ export async function scanImage(file: File): Promise<string> {
 }
 
 export interface ParsedFields {
+  reference?: string;
   account_number?: string;
   invoice_number?: string;
   po_number?: string;
@@ -58,6 +59,11 @@ function parseDate(val: string): string {
 
 export function parseWorkOrderForm(text: string): ParsedFields {
   const lines = text.split('\n').filter(Boolean);
+
+  const reference = extractValue(text, [
+    /(?:ref|reference|wo)\s*(?:#|no)?\s*[:.]?\s*([^\n]+)/i,
+    /WO-[\w-]+/,
+  ]);
 
   const account_number = extractValue(text, [
     /account\s*(?:#|no|number|num)?\s*[:.]?\s*([^\n]+)/i,
@@ -159,6 +165,7 @@ export function parseWorkOrderForm(text: string): ParsedFields {
   }
 
   return {
+    reference,
     account_number,
     invoice_number,
     po_number,
@@ -181,7 +188,7 @@ export function parseWorkOrderForm(text: string): ParsedFields {
   };
 }
 
-const STATUS_OPTIONS = ['Open - Confirmed', 'Open - Unconfirmed', 'In Progress', 'Completed', 'Cancelled'] as const;
+const STATUS_OPTIONS = ['Open', 'In Progress', 'Completed', 'Cancelled'] as const;
 
 function normalizeStatus(val: string): string {
   for (const opt of STATUS_OPTIONS) {
@@ -198,6 +205,7 @@ export function applyParsedFields(
 ): WorkOrderFormData {
   const updated = { ...form };
 
+  if (parsed.reference) updated.reference = parsed.reference;
   if (parsed.account_number) updated.account_number = parsed.account_number;
   if (parsed.invoice_number) updated.invoice_number = parsed.invoice_number;
   if (parsed.po_number) updated.po_number = parsed.po_number;

@@ -9,8 +9,7 @@ from app.database import Base
 
 
 class WorkOrderStatus(str, enum.Enum):
-    OPEN_CONFIRMED = "Open - Confirmed"
-    OPEN_UNCONFIRMED = "Open - Unconfirmed"
+    OPEN = "Open"
     IN_PROGRESS = "In Progress"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"
@@ -51,7 +50,7 @@ class WorkOrder(Base):
 
     site_timezone: Mapped[str] = mapped_column(String(100), nullable=True, default="America/New_York")
 
-    status: Mapped[WorkOrderStatus] = mapped_column(SAEnum(WorkOrderStatus), default=WorkOrderStatus.OPEN_UNCONFIRMED, nullable=False)
+    status: Mapped[WorkOrderStatus] = mapped_column(SAEnum(WorkOrderStatus), default=WorkOrderStatus.OPEN, nullable=False)
     confirmation_status: Mapped[ConfirmationStatus] = mapped_column(SAEnum(ConfirmationStatus), default=ConfirmationStatus.UNCONFIRMED, nullable=False)
     google_event_id: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
 

@@ -20,7 +20,7 @@ const emptyForm = (): WorkOrderFormData => ({
   calendar_start: '', calendar_end: '',
   site_timezone: 'America/New_York',
   notes: '',
-  status: 'Open - Unconfirmed',
+  status: 'Open',
   confirmation_status: 'Unconfirmed',
   tasks: [{ task_name: '', qty_required: 1, sort_order: 0 }],
   techs: [],
@@ -289,7 +289,7 @@ export default function WorkOrderForm({ initial, onSubmit, loading }: Props) {
           <div>
             <label className={labelClass}>Status</label>
             <select value={form.status} onChange={(e) => update('status', e.target.value)} className={inputClass('status')}>
-              {['Open - Confirmed', 'Open - Unconfirmed', 'In Progress', 'Completed', 'Cancelled'].map((o) => (
+              {['Open', 'In Progress', 'Completed', 'Cancelled'].map((o) => (
                 <option key={o} value={o}>{o}</option>
               ))}
             </select>

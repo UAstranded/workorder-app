@@ -47,7 +47,7 @@ class WorkOrderBase(BaseModel):
 
     notes: Optional[str] = ""
 
-    status: Optional[str] = "Open - Unconfirmed"
+    status: Optional[str] = "Open"
     confirmation_status: Optional[str] = "Unconfirmed"
 
     tasks: Optional[List[TaskCreate]] = []

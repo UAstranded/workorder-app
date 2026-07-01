@@ -268,7 +268,7 @@ async def create_work_order(
         due_date=body.due_date,
         notes=body.notes or "",
         site_timezone=body.site_timezone or "America/New_York",
-        status=WorkOrderStatus(body.status) if body.status else WorkOrderStatus.OPEN_UNCONFIRMED,
+        status=WorkOrderStatus(body.status) if body.status else WorkOrderStatus.OPEN,
         confirmation_status=ConfirmationStatus(body.confirmation_status) if body.confirmation_status else ConfirmationStatus.UNCONFIRMED,
         created_by_id=user.id,
         modified_by_id=user.id,
