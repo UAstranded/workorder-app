@@ -5,6 +5,8 @@ import { Plus, Trash2, DollarSign } from 'lucide-react';
 interface Expense {
   id: string;
   expense_type: string;
+  qty: number;
+  unit_price: number;
   amount: number;
   description: string;
   tech_name: string;
@@ -20,7 +22,7 @@ export default function ExpensesSection({ workOrderReference }: Props) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [collapsed, setCollapsed] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ expense_type: 'material', amount: 0, description: '', tech_name: '' });
+  const [form, setForm] = useState({ expense_type: 'material', qty: 1, unit_price: 0, description: '', tech_name: '' });
 
   useEffect(() => {
     client.get(`/work-orders/${workOrderReference}/expenses`).then(({ data }) => setExpenses(data));
@@ -32,7 +34,7 @@ export default function ExpensesSection({ workOrderReference }: Props) {
     e.preventDefault();
     const { data } = await client.post(`/work-orders/${workOrderReference}/expenses`, form);
     setExpenses((prev) => [...prev, data]);
-    setForm({ expense_type: 'material', amount: 0, description: '', tech_name: '' });
+    setForm({ expense_type: 'material', qty: 1, unit_price: 0, description: '', tech_name: '' });
     setAdding(false);
   };
 
@@ -66,22 +68,28 @@ export default function ExpensesSection({ workOrderReference }: Props) {
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-800 text-sm">
               {expenses.map((exp) => (
-                <div key={exp.id} className="flex items-center justify-between py-2 first:pt-0 last:pb-0 gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${exp.expense_type === 'mileage' ? 'bg-blue-500' : exp.expense_type === 'labor' ? 'bg-purple-500' : exp.expense_type === 'material' ? 'bg-amber-500' : 'bg-green-500'}`} />
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{typeLabel(exp.expense_type)}</span>
-                      {exp.tech_name && <span className="text-gray-400 dark:text-gray-500 text-xs">{exp.tech_name}</span>}
+                  <div key={exp.id} className="flex items-center justify-between py-2 first:pt-0 last:pb-0 gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block w-1.5 h-1.5 rounded-full ${exp.expense_type === 'mileage' ? 'bg-blue-500' : exp.expense_type === 'labor' ? 'bg-purple-500' : exp.expense_type === 'material' ? 'bg-amber-500' : 'bg-green-500'}`} />
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{typeLabel(exp.expense_type)}</span>
+                        {exp.tech_name && <span className="text-gray-400 dark:text-gray-500 text-xs">{exp.tech_name}</span>}
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                        {exp.description && <span className="truncate">{exp.description}</span>}
+                        {exp.qty > 1 && <span>&times;{exp.qty}</span>}
+                      </div>
                     </div>
-                    {exp.description && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{exp.description}</p>}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="text-right">
+                        <div className="font-display text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">${exp.amount.toFixed(2)}</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">${exp.unit_price.toFixed(2)} &times; {exp.qty}</div>
+                      </div>
+                      <button onClick={() => handleDelete(exp.id)} className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="font-display text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">${exp.amount.toFixed(2)}</span>
-                    <button onClick={() => handleDelete(exp.id)} className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                </div>
               ))}
             </div>
           )}
@@ -97,12 +105,21 @@ export default function ExpensesSection({ workOrderReference }: Props) {
               </select>
               <input
                 type="number"
+                min="1"
+                placeholder="Qty"
+                value={form.qty || ''}
+                onChange={(e) => setForm({ ...form, qty: parseInt(e.target.value) || 1 })}
+                className="input-field w-16"
+                required
+              />
+              <input
+                type="number"
                 step="0.01"
                 min="0"
-                placeholder="Amount"
-                value={form.amount || ''}
-                onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })}
-                className="input-field w-28"
+                placeholder="Price"
+                value={form.unit_price || ''}
+                onChange={(e) => setForm({ ...form, unit_price: parseFloat(e.target.value) || 0 })}
+                className="input-field w-24"
                 required
               />
               <input

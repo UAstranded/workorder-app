@@ -22,6 +22,8 @@ class WorkOrderExpense(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     work_order_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("work_orders.id", ondelete="CASCADE"), nullable=False, index=True)
     expense_type: Mapped[ExpenseType] = mapped_column(SAEnum(ExpenseType), nullable=False)
+    qty: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=0, nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True, default="")
     tech_name: Mapped[str] = mapped_column(String(255), nullable=True, default="")

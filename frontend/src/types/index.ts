@@ -87,6 +87,8 @@ export interface WorkOrderExpense {
   id: string;
   work_order_id: string;
   expense_type: string;
+  qty: number;
+  unit_price: number;
   amount: number;
   description: string;
   tech_name: string;

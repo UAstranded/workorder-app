@@ -47,7 +47,9 @@ async def create_expense(
     exp = WorkOrderExpense(
         work_order_id=wo.id,
         expense_type=ExpenseType(body.expense_type),
-        amount=body.amount,
+        qty=body.qty,
+        unit_price=body.unit_price,
+        amount=body.qty * body.unit_price,
         description=body.description or "",
         tech_name=body.tech_name or "",
         sort_order=body.sort_order,
@@ -80,6 +82,7 @@ async def update_expense(
         elif value is not None:
             setattr(exp, field, value)
 
+    exp.amount = exp.qty * exp.unit_price
     await db.commit()
     await db.refresh(exp)
     return ExpenseResponse.model_validate(exp)
